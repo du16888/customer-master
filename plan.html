@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>客户主数据（Customer MDM / OneID）评估与开发路线图 — 时代邻里</title>
+<style>
+  :root {
+    --primary: #1677FF;
+    --success: #52c41a;
+    --warning: #fa8c16;
+    --danger: #f5222d;
+    --bg: #f5f7fa;
+    --card: #ffffff;
+    --border: #e8e8e8;
+    --text: #1a1a2e;
+    --text-secondary: #666;
+    --radius: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.7;
+  }
+  .page-header {
+    background: linear-gradient(135deg, #0d47a1 0%, #1677FF 60%, #42a5f5 100%);
+    color: #fff;
+    padding: 48px 60px 40px;
+  }
+  .page-header .tag {
+    display: inline-block;
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.35);
+    border-radius: 20px;
+    padding: 3px 14px;
+    font-size: 12px;
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+  }
+  .page-header h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+  .page-header .subtitle { font-size: 15px; opacity: 0.85; margin-bottom: 24px; }
+  .header-meta { display: flex; gap: 32px; flex-wrap: wrap; }
+  .header-meta-item { font-size: 13px; opacity: 0.8; }
+  .header-meta-item strong { opacity: 1; font-size: 14px; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 32px 24px 64px; }
+  .section { margin-bottom: 40px; }
+  .section-title {
+    font-size: 18px; font-weight: 700;
+    color: var(--primary);
+    border-left: 4px solid var(--primary);
+    padding-left: 12px;
+    margin-bottom: 20px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-title .num {
+    background: var(--primary); color: #fff;
+    border-radius: 50%; width: 24px; height: 24px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; flex-shrink: 0;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  .card h3 { font-size: 15px; font-weight: 600; margin-bottom: 12px; color: #222; }
+  .card h4 { font-size: 13px; font-weight: 600; margin: 12px 0 6px; color: #444; }
+  /* Summary grid */
+  .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+  .kpi-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 20px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  .kpi-card .val { font-size: 28px; font-weight: 700; line-height: 1.2; margin-bottom: 4px; }
+  .kpi-card .label { font-size: 12px; color: var(--text-secondary); }
+  .kpi-card.primary .val { color: var(--primary); }
+  .kpi-card.success .val { color: var(--success); }
+  .kpi-card.warning .val { color: var(--warning); }
+  .kpi-card.danger .val { color: var(--danger); }
+  /* Badges */
+  .badge {
+    display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 600;
+  }
+  .badge-success { background: #f6ffed; color: var(--success); border: 1px solid #b7eb8f; }
+  .badge-warning { background: #fff7e6; color: var(--warning); border: 1px solid #ffd591; }
+  .badge-danger  { background: #fff1f0; color: var(--danger);  border: 1px solid #ffa39e; }
+  .badge-primary { background: #e6f4ff; color: var(--primary); border: 1px solid #91caff; }
+  .badge-gray    { background: #fafafa; color: #666; border: 1px solid #d9d9d9; }
+  /* Two-col layout */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  /* Progress bar */
+  .progress-row { margin-bottom: 10px; }
+  .progress-label { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 13px; }
+  .progress-bar { height: 8px; background: #f0f0f0; border-radius: 4px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 4px; }
+  /* Sprint table */
+  table.sprint-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .sprint-table th {
+    background: var(--primary); color: #fff;
+    padding: 10px 12px; text-align: left; font-weight: 600;
+  }
+  .sprint-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .sprint-table tr:nth-child(even) td { background: #fafcff; }
+  .sprint-table tr:hover td { background: #e6f4ff; }
+  /* Risk table */
+  table.risk-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .risk-table th { background: #37474f; color: #fff; padding: 10px 12px; text-align: left; }
+  .risk-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .risk-high   { background: #fff1f0 !important; }
+  .risk-medium { background: #fff7e6 !important; }
+  .risk-low    { background: #f6ffed !important; }
+  /* Architecture boxes */
+  .arch-box {
+    background: #f0f7ff; border: 1px solid #91caff; border-radius: 6px;
+    padding: 16px; font-family: "Courier New", monospace; font-size: 12px;
+    line-height: 1.8; white-space: pre; overflow-x: auto;
+  }
+  /* Timeline */
+  .timeline { position: relative; padding: 20px 0; }
+  .timeline-track {
+    display: flex; align-items: flex-start; gap: 0;
+    position: relative; padding-bottom: 8px;
+  }
+  .timeline-track::before {
+    content: ''; position: absolute; top: 28px; left: 0; right: 0;
+    height: 4px; background: linear-gradient(90deg, var(--success), var(--primary), #bfbfbf);
+    z-index: 0; border-radius: 2px;
+  }
+  .milestone {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    position: relative; z-index: 1;
+  }
+  .milestone-dot {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; color: #fff;
+    border: 3px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+    flex-shrink: 0; margin-bottom: 8px;
+  }
+  .milestone-dot.done   { background: var(--success); }
+  .milestone-dot.active { background: var(--primary); }
+  .milestone-dot.future { background: #bfbfbf; }
+  .milestone-label { font-size: 11px; text-align: center; line-height: 1.4; color: #444; max-width: 90px; }
+  .milestone-date  { font-size: 11px; color: var(--text-secondary); text-align: center; margin-top: 2px; }
+  /* Challenges */
+  .challenge-item {
+    border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 18px 20px; margin-bottom: 12px;
+    border-left: 4px solid var(--primary);
+    background: #fff;
+  }
+  .challenge-item h4 { font-size: 14px; font-weight: 700; margin-bottom: 8px; color: #222; }
+  .challenge-item p  { font-size: 13px; color: #444; margin-bottom: 6px; }
+  .challenge-item .solution { font-size: 13px; color: var(--success); }
+  /* Completed items */
+  .completed-list { list-style: none; }
+  .completed-list li { padding: 5px 0; font-size: 13px; color: #333; }
+  .completed-list li::before { content: "✓ "; color: var(--success); font-weight: 700; }
+  /* Gap list */
+  .gap-list { list-style: none; }
+  .gap-list li { padding: 5px 0; font-size: 13px; color: #333; }
+  .gap-list li::before { content: "○ "; color: var(--warning); font-weight: 700; }
+  /* System integration map */
+  .sys-grid {
+    display: grid; grid-template-columns: 1fr 80px 1fr; gap: 0;
+    align-items: center; margin-bottom: 12px;
+  }
+  .sys-box {
+    background: #f0f7ff; border: 1px solid #91caff; border-radius: 6px;
+    padding: 12px; text-align: center; font-size: 12px;
+  }
+  .sys-box strong { display: block; font-size: 13px; margin-bottom: 4px; color: var(--primary); }
+  .sys-arrow { text-align: center; font-size: 20px; color: var(--primary); }
+  /* Resource table */
+  table.res-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .res-table th { background: #263238; color: #fff; padding: 10px 12px; text-align: left; }
+  .res-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  .res-table tr:nth-child(even) td { background: #fafafa; }
+  /* Info box */
+  .info-box {
+    background: #e6f4ff; border: 1px solid #91caff; border-radius: 6px;
+    padding: 14px 18px; margin-bottom: 16px; font-size: 13px; color: #004085;
+  }
+  .warn-box {
+    background: #fff7e6; border: 1px solid #ffd591; border-radius: 6px;
+    padding: 14px 18px; margin-bottom: 16px; font-size: 13px; color: #7c4a00;
+  }
+  .danger-box {
+    background: #fff1f0; border: 1px solid #ffa39e; border-radius: 6px;
+    padding: 14px 18px; margin-bottom: 16px; font-size: 13px; color: #820014;
+  }
+  ul.plain { list-style: disc; padding-left: 20px; }
+  ul.plain li { margin-bottom: 4px; font-size: 13px; }
+  @media print {
+    body { background: #fff; }
+    .page-header { background: #1677FF !important; -webkit-print-color-adjust: exact; }
+    .kpi-card, .card { box-shadow: none; }
+    .container { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="tag">CONFIDENTIAL — INTERNAL ROADMAP</div>
+  <h1>客户主数据（Customer MDM / OneID）<br>评估报告与开发路线图</h1>
+  <div class="subtitle">时代邻里物业管理 · 2026年第二季度至第三季度</div>
+  <div class="header-meta">
+    <div class="header-meta-item">报告日期<br><strong>2026-04-22</strong></div>
+    <div class="header-meta-item">目标上线<br><strong>2026-08-29</strong></div>
+    <div class="header-meta-item">剩余周期<br><strong>约 18 周</strong></div>
+    <div class="header-meta-item">整体信心<br><strong>中高（68%）</strong></div>
+    <div class="header-meta-item">当前阶段<br><strong>Sprint 3/9 进行中</strong></div>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- ===== 1. 执行摘要 ===== -->
+<div class="section">
+  <div class="section-title"><span class="num">1</span>执行摘要</div>
+
+  <div class="summary-grid">
+    <div class="kpi-card primary">
+      <div class="val">18</div>
+      <div class="label">剩余可用周数</div>
+    </div>
+    <div class="kpi-card success">
+      <div class="val">35%</div>
+      <div class="label">基础设施完成度</div>
+    </div>
+    <div class="kpi-card warning">
+      <div class="val">8</div>
+      <div class="label">关键风险项</div>
+    </div>
+    <div class="kpi-card danger">
+      <div class="val">3</div>
+      <div class="label">高风险阻断项</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>关键发现</h3>
+    <p>时代邻里已完成客户主数据系统的基础层建设（表结构、数据清洗、加解密、接口定义、独立服务及同步规则），具备了向上层业务能力演进的技术基础。当前进入最关键阶段：<strong>OneID 匹配引擎、多系统全量接入与数据治理工作流</strong>三大核心能力的并行交付。</p>
+    <p style="margin-top:10px;">在 <strong>18 周</strong>内完成剩余 9 个 Sprint 并按期上线，整体可行，但需满足以下前提条件：</p>
+    <ul class="plain" style="margin-top:8px;">
+      <li>OneID 匹配引擎的置信度算法在 Sprint 1（4.28-5.9）内完成核心设计并通过内部评审</li>
+      <li>各业务系统（电商、租售）在 Sprint 3（5.26-6.6）前完成接口联调配合</li>
+      <li>历史数据质量问题在 Sprint 8（8.4-8.15）前完成清洗演练，不晚于 7 月底结论</li>
+      <li>至少 2 名后端工程师全程投入，前端资源 Sprint 6 前到位</li>
+    </ul>
+  </div>
+
+  <div class="warn-box">
+    <strong>风险预警：</strong>当前最大阻断风险为「历史数据质量不可预测」与「小程序多账号归并的产品决策缺失」。若 5 月底前未完成数据摸底和产品方案确认，建议启动范围收缩讨论（Phase 1 上线时不含小程序归并能力）。
+  </div>
+</div>
+
+<!-- ===== 2. 现状评估 ===== -->
+<div class="section">
+  <div class="section-title"><span class="num">2</span>现状评估</div>
+
+  <div class="two-col">
+    <div class="card">
+      <h3>已完成工作（截至 4.24）</h3>
+      <ul class="completed-list">
+        <li>三实体数据模型：房间主体 / 客户主体 / 业主主体表结构设计</li>
+        <li>数据库 CRUD 方法层封装（含分页、软删除）</li>
+        <li>初步数据清洗脚本（手机号标准化、身份证校验）</li>
+        <li>敏感字段 AES-256 加解密工具方法</li>
+        <li>REST 接口定义（OpenAPI 3.0 规范）</li>
+        <li>客户主数据独立微服务（独立部署、独立数据库）</li>
+        <li>社区管理系统 → 主数据同步规则文档</li>
+        <li>接口回调处理框架（消息队列监听）</li>
+        <li>异常处理中间件与告警接入</li>
+        <li>客户主数据前端工程脚手架搭建</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>能力缺口分析</h3>
+      <ul class="gap-list">
+        <li>OneID 匹配引擎（置信度算法）未实现</li>
+        <li>电商系统、租售系统接口未接入</li>
+        <li>小程序用户归并逻辑缺失</li>
+        <li>多公司主体数据隔离策略未落地</li>
+        <li>合并 / 拆分工作流（人工干预流程）未开发</li>
+        <li>一户一档前端功能页面未完成</li>
+        <li>客户标签体系未建设</li>
+        <li>历史存量数据迁移方案未制定</li>
+        <li>性能测试方案缺失（全量数据压测）</li>
+        <li>UAT 测试用例未准备</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>完成度评估</h3>
+    <div class="progress-row">
+      <div class="progress-label"><span>基础设施与数据层</span><span>80%</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:80%;background:var(--success);"></div></div>
+    </div>
+    <div class="progress-row">
+      <div class="progress-label"><span>同步规则与回调框架</span><span>60%</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:60%;background:var(--primary);"></div></div>
+    </div>
+    <div class="progress-row">
+      <div class="progress-label"><span>OneID 匹配引擎</span><span>5%</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:5%;background:var(--danger);"></div></div>
+    </div>
+    <div class="progress-row">
+      <div class="progress-label"><span>多系统接入（电商/租售）</span><span>0%</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:0%;background:var(--danger);"></div></div>
+    </div>
+    <div class="progress-row">
+      <div class="progress-label"><span>前端功能模块</span><span>10%</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:10%;background:var(--warning);"></div></div>
+    </div>
+    <div class="progress-row">
+      <div class="progress-label"><span>数据治理工作流</span><span>0%</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:0%;background:var(--danger);"></div></div>
+    </div>
+    <div class="progress-row">
+      <div class="progress-label"><span>整体综合完成度</span><span>35%</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:35%;background:var(--primary);"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 3. 核心技术架构 ===== -->
+<div class="section">
+  <div class="section-title"><span class="num">3</span>核心技术架构</div>
+
+  <div class="card">
+    <h3>三实体数据模型</h3>
+    <div class="arch-box">
+┌─────────────────────────────────────────────────────────────────────┐
+│                      客户主数据核心模型（三实体）                        │
+├──────────────────┬────────────────────┬──────────────────────────────┤
+│   房间主体         │    客户主体（OneID）  │        业主主体              │
+│  Room Entity     │  Customer Entity   │    Owner Entity              │
+├──────────────────┼────────────────────┼──────────────────────────────┤
+│ room_id (PK)     │ one_id (PK/UUID)   │ owner_id (PK)               │
+│ building_code    │ name               │ one_id (FK → 客户主体)       │
+│ unit_no          │ mobile_hash        │ room_id (FK → 房间主体)      │
+│ floor_no         │ id_card_hash       │ owner_type [业主/共有人]     │
+│ room_no          │ gender             │ ownership_ratio              │
+│ community_code   │ birthday           │ valid_from                   │
+│ company_entity   │ tags[]             │ valid_to                     │
+│ property_type    │ source_systems[]   │ transfer_history[]           │
+│ status           │ confidence_score   │ company_entity               │
+│ created_at       │ merged_from[]      │ created_at                   │
+│                  │ created_at         │                              │
+└──────────────────┴────────────────────┴──────────────────────────────┘
+
+关系层：人房关系表（customer_room_relation）
+  one_id | room_id | relation_type[业主/租客/家属/授权人] | valid_from | valid_to
+  支持：一人多房（同一 one_id 对应多条 room 记录）
+        一房多人（同一 room_id 对应多条 one_id 记录）
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>OneID 匹配算法策略（置信度评分模型）</h3>
+    <div class="arch-box">
+匹配维度权重矩阵：
+  ┌─────────────────────┬────────┬──────────────────────────────┐
+  │ 匹配字段             │ 权重   │ 说明                          │
+  ├─────────────────────┼────────┼──────────────────────────────┤
+  │ 手机号（精确）        │  50   │ 最强标识，强制置信触发           │
+  │ 身份证号（精确）      │  45   │ 强标识，去除格式差异后比对        │
+  │ 姓名 + 手机后4位     │  35   │ 姓名模糊匹配 + 号码辅助          │
+  │ 微信 UnionID        │  40   │ 小程序跨平台唯一标识             │
+  │ 姓名 + 房间          │  25   │ 同房同名视为同人，需人工确认       │
+  │ 邮箱（精确）         │  20   │ 辅助维度                       │
+  └─────────────────────┴────────┴──────────────────────────────┘
+
+置信度分段决策：
+  ≥ 80分 → 自动合并（Auto Merge），写入 audit_log
+  50-79分 → 待人工确认队列（Pending Review）
+  &lt; 50分 → 独立存档，不合并
+
+防止误合并保护机制：
+  • 同一手机号出现 >3 个活跃房间 → 触发人工审核
+  • 合并操作写入不可篡改的审计日志
+  • 支持合并回滚（Undo Merge），保留原始记录
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>四系统集成数据流</h3>
+    <div class="arch-box">
+  ┌──────────────────────────────────────────────────────────────────┐
+  │                     数据流向总览                                   │
+  └──────────────────────────────────────────────────────────────────┘
+
+  [社区管理系统]──(MQ事件推送)──┐
+  [收  费  系统]──(依赖社区管理)──┤
+  [电  商  系统]──(定时同步+Webhook)──┼──→ [OneID 匹配引擎] ──→ [客户主数据库]
+  [租  售  系统]──(增量接口推送)──┤                              │
+  [各小程序端]──(UnionID注册)──┘                              ↓
+                                                    [前端管理平台]
+                                                    一户一档 / 标签 /
+                                                    权限管理 / 治理工作流
+                                                    （客户运营 → Phase 2）
+
+  数据写入原则：
+  ① 社区管理系统为黄金数据源（人房关系权威）
+  ② 电商/租售补充联系方式与行为标签
+  ③ 主数据不向业务系统写回（单向流）
+  ④ 变更事件通过 MQ 异步广播给订阅方
+    </div>
+  </div>
+</div>
+
+<!-- ===== 4. 关键挑战与解决方案 ===== -->
+<div class="section">
+  <div class="section-title"><span class="num">4</span>关键挑战与解决方案</div>
+
+  <div class="challenge-item">
+    <h4>挑战 1：跨系统身份匹配（置信度评分）</h4>
+    <p><strong>问题：</strong>四个系统使用不同用户标识（手机号、微信OpenID、内部ID），同一个人在不同系统中可能手机号不同、姓名有别字，直接合并会产生「错误归一」。</p>
+    <p class="solution"><strong>方案：</strong>实现多维度加权置信度评分引擎。高置信（≥80分）自动合并；中等置信（50-79分）进入人工审核队列，展示 diff 后由数据管理员确认；低置信独立存档。所有合并操作写入不可变审计日志，支持回滚。</p>
+  </div>
+
+  <div class="challenge-item">
+    <h4>挑战 2：一人多房 / 一房多人关系图</h4>
+    <p><strong>问题：</strong>业主可拥有多套房产；同一套房可有业主、共有人、租客、家属等多重关系；房屋转让/租约变更时关系需历史留存不可覆盖。</p>
+    <p class="solution"><strong>方案：</strong>人房关系表采用「有效期」设计（valid_from / valid_to），变更时关闭旧记录、新增新记录，确保历史可追溯。前端提供「关系图谱」视图，以房间为中心展示所有关联人，以人为中心展示所有关联房间。</p>
+  </div>
+
+  <div class="challenge-item">
+    <h4>挑战 3：不同公司主体数据隔离与共享</h4>
+    <p><strong>问题：</strong>时代邻里下辖多个公司主体，各主体数据不能越权查询，但同一客户可能在多个主体下均有业务往来，需要「隔离中有共享」。</p>
+    <p class="solution"><strong>方案：</strong>在所有核心表增加 company_entity 字段，API 层强制注入当前主体过滤条件（Row-Level Security 思路）。跨主体视图通过专用接口开放，需特殊权限角色。OneID 本身跨主体全局唯一，关系数据按主体隔离。</p>
+  </div>
+
+  <div class="challenge-item">
+    <h4>挑战 4：小程序多账号归并</h4>
+    <p><strong>问题：</strong>用户在不同小程序下有不同 OpenID，微信 UnionID 可统一，但用户需主动授权；历史未授权用户 UnionID 缺失，无法自动归并。</p>
+    <p class="solution"><strong>方案：</strong>① 新用户注册时强制获取 UnionID 写入主数据；② 存量用户通过「手机号验证」触发归并（用户登录时引导验证）；③ 无法自动归并的独立存档，前端提供「疑似同人」待确认列表供管理员处理。</p>
+  </div>
+
+  <div class="challenge-item">
+    <h4>挑战 5：数据质量治理（合并 / 拆分工作流）</h4>
+    <p><strong>问题：</strong>自动匹配不可能 100% 准确，错误合并（将两个不同人合为一个 OneID）比漏合并危害更大，需要完善的人工干预机制。</p>
+    <p class="solution"><strong>方案：</strong>构建「数据治理工作流」：① Merge（合并）：展示两条记录的字段 diff，管理员逐字段选择保留值后确认；② Split（拆分）：对已合并记录可选择恢复为独立记录，系统自动生成新 OneID；③ Flag（标记）：对存疑记录打标，定期复查。所有操作有操作人、时间、原因记录。</p>
+  </div>
+
+  <div class="challenge-item">
+    <h4>挑战 6：历史数据迁移</h4>
+    <p><strong>问题：</strong>各业务系统积累了数年历史数据，数据质量参差不齐（重复手机号、缺失字段、格式不一致），全量迁移存在不可预知的质量风险。</p>
+    <p class="solution"><strong>方案：</strong>① Sprint 2-3 期间先做「数据质量摸底报告」（运行清洗规则但不写入生产库，输出质量报告）；② Sprint 8 进行至少一次全量迁移演练（影子库），记录异常率；③ 若异常率超过 5%，上线方案调整为「增量上线」（仅迁移近两年活跃数据）。</p>
+  </div>
+</div>
+
+<!-- ===== 5. 详细开发计划 ===== -->
+<div class="section">
+  <div class="section-title"><span class="num">5</span>详细开发计划（4.28 — 8.29）</div>
+
+  <div class="info-box">
+    Sprint 周期：2周 / 共 9 个 Sprint。每 Sprint 结束进行 Demo + 回顾。标注「关键路径」的 Sprint 不可延期，否则影响后续所有计划。
+  </div>
+
+  <div class="card" style="padding:0; overflow:hidden;">
+    <table class="sprint-table">
+      <thead>
+        <tr>
+          <th width="12%">Sprint</th>
+          <th width="14%">周期</th>
+          <th width="28%">核心交付物</th>
+          <th width="28%">关键任务</th>
+          <th width="10%">风险等级</th>
+          <th width="8%">状态</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Sprint 1</strong><br><span style="color:var(--danger);font-size:11px;">关键路径</span></td>
+          <td>4.28 — 5.9</td>
+          <td>OneID 匹配引擎核心<br>置信度评分算法 v1</td>
+          <td>
+            · 多维度权重评分模型实现<br>
+            · 手机号/身份证哈希比对<br>
+            · 自动合并 + 待审核队列<br>
+            · 合并审计日志表
+          </td>
+          <td><span class="badge badge-danger">高</span></td>
+          <td><span class="badge badge-warning">待开始</span></td>
+        </tr>
+        <tr>
+          <td><strong>Sprint 2</strong><br><span style="color:var(--danger);font-size:11px;">关键路径</span></td>
+          <td>5.12 — 5.23</td>
+          <td>社区管理系统全量接入<br>数据质量摸底报告</td>
+          <td>
+            · 社区管理系统全量同步（含存量）<br>
+            · 人房关系全量导入<br>
+            · 数据清洗完整版（去重/标准化）<br>
+            · 清洗质量报告输出（不写生产库）
+          </td>
+          <td><span class="badge badge-warning">中</span></td>
+          <td><span class="badge badge-gray">未开始</span></td>
+        </tr>
+        <tr>
+          <td><strong>Sprint 3</strong></td>
+          <td>5.26 — 6.6</td>
+          <td>电商 + 租售系统接入<br>增量同步机制</td>
+          <td>
+            · 电商系统用户接口联调<br>
+            · 租售系统用户接口联调<br>
+            · 增量变更事件订阅（MQ）<br>
+            · 跨系统匹配首次运行
+          </td>
+          <td><span class="badge badge-warning">中</span></td>
+          <td><span class="badge badge-gray">未开始</span></td>
+        </tr>
+        <tr>
+          <td><strong>Sprint 4</strong><br><span style="color:var(--danger);font-size:11px;">关键路径</span></td>
+          <td>6.9 — 6.20</td>
+          <td>小程序用户归并<br>多公司主体支持</td>
+          <td>
+            · 微信 UnionID 归并逻辑<br>
+            · 手机号验证触发归并流程<br>
+            · company_entity 多租户隔离<br>
+            · 跨主体权限接口设计
+          </td>
+          <td><span class="badge badge-danger">高</span></td>
+          <td><span class="badge badge-gray">未开始</span></td>
+        </tr>
+        <tr>
+          <td><strong>Sprint 5</strong></td>
+          <td>6.23 — 7.4</td>
+          <td>数据治理工作流<br>合并 / 拆分 / 标记</td>
+          <td>
+            · Merge 工作流（字段 diff UI）<br>
+            · Split 拆分流程 + 新 OneID 生成<br>
+            · Flag 标记 + 复查机制<br>
+            · 治理操作审计日志前端
+          </td>
+          <td><span class="badge badge-warning">中</span></td>
+          <td><span class="badge badge-gray">未开始</span></td>
+        </tr>
+        <tr>
+          <td><strong>Sprint 6</strong></td>
+          <td>7.7 — 7.18</td>
+          <td>前端全功能完成<br>一户一档 / 标签 / 权限</td>
+          <td>
+            · 一户一档详情页（人房关系图谱）<br>
+            · 客户标签体系管理（四级树结构）<br>
+            · 权限管理模块<br>
+            · 搜索 + 筛选 + 导出功能<br>
+            <span style="color:#fa8c16;font-size:12px">⚠ 客户运营模块不在此次范围，菜单保留但标注"规划中"</span>
+          </td>
+          <td><span class="badge badge-warning">中</span></td>
+          <td><span class="badge badge-gray">未开始</span></td>
+        </tr>
+        <tr>
+          <td><strong>Sprint 7</strong></td>
+          <td>7.21 — 8.1</td>
+          <td>集成测试<br>性能优化</td>
+          <td>
+            · 端到端集成测试（4系统联动）<br>
+            · 压力测试（全量数据场景）<br>
+            · 索引优化 + 慢查询治理<br>
+            · BUG 修复 + 安全扫描
+          </td>
+          <td><span class="badge badge-success">低</span></td>
+          <td><span class="badge badge-gray">未开始</span></td>
+        </tr>
+        <tr>
+          <td><strong>Sprint 8</strong><br><span style="color:var(--danger);font-size:11px;">关键路径</span></td>
+          <td>8.4 — 8.15</td>
+          <td>UAT + 数据迁移演练</td>
+          <td>
+            · UAT 测试用例（业务方执行）<br>
+            · 全量历史数据迁移演练（影子库）<br>
+            · 迁移质量报告 + 异常回滚演练<br>
+            · 运维监控告警配置
+          </td>
+          <td><span class="badge badge-danger">高</span></td>
+          <td><span class="badge badge-gray">未开始</span></td>
+        </tr>
+        <tr>
+          <td><strong>Sprint 9</strong></td>
+          <td>8.18 — 8.29</td>
+          <td>生产部署<br>上线保障</td>
+          <td>
+            · 生产环境部署（灰度发布）<br>
+            · 数据切换（按计划窗口执行）<br>
+            · 上线保障值班（72小时）<br>
+            · 上线后数据质量验证
+          </td>
+          <td><span class="badge badge-warning">中</span></td>
+          <td><span class="badge badge-gray">未开始</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== 6. 里程碑节点 ===== -->
+<div class="section">
+  <div class="section-title"><span class="num">6</span>里程碑节点</div>
+  <div class="card">
+    <div class="timeline">
+      <div class="timeline-track">
+        <div class="milestone">
+          <div class="milestone-dot done">M0</div>
+          <div class="milestone-label">基础设施完成<br>独立服务上线</div>
+          <div class="milestone-date">4.24</div>
+        </div>
+        <div class="milestone">
+          <div class="milestone-dot active">M1</div>
+          <div class="milestone-label">OneID 引擎<br>社区数据接入</div>
+          <div class="milestone-date">5.23</div>
+        </div>
+        <div class="milestone">
+          <div class="milestone-dot future">M2</div>
+          <div class="milestone-label">四系统全量<br>接入完成</div>
+          <div class="milestone-date">6.20</div>
+        </div>
+        <div class="milestone">
+          <div class="milestone-dot future">M3</div>
+          <div class="milestone-label">前端全功能<br>治理工作流</div>
+          <div class="milestone-date">7.18</div>
+        </div>
+        <div class="milestone">
+          <div class="milestone-dot future">M4</div>
+          <div class="milestone-label">UAT 通过<br>迁移演练完成</div>
+          <div class="milestone-date">8.15</div>
+        </div>
+        <div class="milestone">
+          <div class="milestone-dot future">M5</div>
+          <div class="milestone-label">正式上线<br>生产稳定</div>
+          <div class="milestone-date">8.29</div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:16px;margin-top:12px;flex-wrap:wrap;">
+      <span><span class="milestone-dot done" style="display:inline-block;width:14px;height:14px;border-radius:50%;background:var(--success);vertical-align:middle;margin-right:4px;"></span> 已完成</span>
+      <span><span class="milestone-dot active" style="display:inline-block;width:14px;height:14px;border-radius:50%;background:var(--primary);vertical-align:middle;margin-right:4px;"></span> 进行中 / 即将开始</span>
+      <span><span class="milestone-dot future" style="display:inline-block;width:14px;height:14px;border-radius:50%;background:#bfbfbf;vertical-align:middle;margin-right:4px;"></span> 未开始</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 7. 风险清单 ===== -->
+<div class="section">
+  <div class="section-title"><span class="num">7</span>风险清单</div>
+
+  <div class="card" style="padding:0; overflow:hidden;">
+    <table class="risk-table">
+      <thead>
+        <tr>
+          <th width="4%">#</th>
+          <th width="20%">风险描述</th>
+          <th width="8%">概率</th>
+          <th width="8%">影响</th>
+          <th width="8%">综合</th>
+          <th width="28%">缓解措施</th>
+          <th width="12%">责任人</th>
+          <th width="12%">触发时间</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="risk-high">
+          <td>R1</td>
+          <td>历史数据质量极差，清洗工作量远超预估，阻塞迁移</td>
+          <td><span class="badge badge-danger">高</span></td>
+          <td><span class="badge badge-danger">高</span></td>
+          <td><span class="badge badge-danger">极高</span></td>
+          <td>5月底完成摸底报告，提前决策是否缩减迁移范围（近2年数据优先）</td>
+          <td>数据工程师</td>
+          <td>Sprint 2</td>
+        </tr>
+        <tr class="risk-high">
+          <td>R2</td>
+          <td>小程序多账号归并产品决策缺失，导致 Sprint 4 被动返工</td>
+          <td><span class="badge badge-danger">高</span></td>
+          <td><span class="badge badge-danger">高</span></td>
+          <td><span class="badge badge-danger">极高</span></td>
+          <td>5月15日前完成产品方案评审，明确是否 Phase 1 上线包含该能力</td>
+          <td>产品经理</td>
+          <td>Sprint 2结束</td>
+        </tr>
+        <tr class="risk-high">
+          <td>R3</td>
+          <td>电商/租售系统接口联调配合不足，Sprint 3 推迟</td>
+          <td><span class="badge badge-warning">中</span></td>
+          <td><span class="badge badge-danger">高</span></td>
+          <td><span class="badge badge-danger">高</span></td>
+          <td>4.28 前完成接口规范对齐会议，明确联调时间窗口，建立跨团队 SLA</td>
+          <td>项目经理</td>
+          <td>Sprint 1</td>
+        </tr>
+        <tr class="risk-medium">
+          <td>R4</td>
+          <td>OneID 匹配算法误合并率过高（>2%），业务方不接受</td>
+          <td><span class="badge badge-warning">中</span></td>
+          <td><span class="badge badge-danger">高</span></td>
+          <td><span class="badge badge-warning">高</span></td>
+          <td>Sprint 1 结束后用真实脱敏数据进行 A/B 验证，迭代权重参数</td>
+          <td>后端工程师</td>
+          <td>Sprint 1结束</td>
+        </tr>
+        <tr class="risk-medium">
+          <td>R5</td>
+          <td>多公司主体权限设计不当，导致数据越权访问</td>
+          <td><span class="badge badge-warning">中</span></td>
+          <td><span class="badge badge-danger">高</span></td>
+          <td><span class="badge badge-warning">高</span></td>
+          <td>Sprint 4 前完成安全架构评审，接入安全团队，上线前必须通过渗透测试</td>
+          <td>架构师</td>
+          <td>Sprint 3结束</td>
+        </tr>
+        <tr class="risk-medium">
+          <td>R6</td>
+          <td>前端资源不足，Sprint 6 无法完成全功能开发</td>
+          <td><span class="badge badge-warning">中</span></td>
+          <td><span class="badge badge-warning">中</span></td>
+          <td><span class="badge badge-warning">中</span></td>
+          <td>6月前确定前端人员配置，若缺口，Sprint 6 优先完成核心功能（一户一档+标签+权限）；客户运营已确认移至 Phase 2，不影响本次上线</td>
+          <td>研发负责人</td>
+          <td>Sprint 5前</td>
+        </tr>
+        <tr class="risk-low">
+          <td>R7</td>
+          <td>生产环境性能不达标（全量数据查询超时）</td>
+          <td><span class="badge badge-success">低</span></td>
+          <td><span class="badge badge-warning">中</span></td>
+          <td><span class="badge badge-success">中</span></td>
+          <td>Sprint 7 进行压力测试，提前准备索引方案和缓存层（Redis）</td>
+          <td>后端工程师</td>
+          <td>Sprint 7</td>
+        </tr>
+        <tr class="risk-low">
+          <td>R8</td>
+          <td>UAT 阶段业务方大量提出新需求，导致范围蔓延</td>
+          <td><span class="badge badge-warning">中</span></td>
+          <td><span class="badge badge-warning">中</span></td>
+          <td><span class="badge badge-success">低</span></td>
+          <td>Sprint 1 前完成需求基线冻结（Scope Freeze），新需求统一进 Phase 2 Backlog</td>
+          <td>产品经理</td>
+          <td>持续</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== 8. 资源建议 ===== -->
+<div class="section">
+  <div class="section-title"><span class="num">8</span>资源建议</div>
+
+  <div class="two-col">
+    <div class="card" style="padding:0; overflow:hidden;">
+      <table class="res-table">
+        <thead>
+          <tr>
+            <th>角色</th>
+            <th>人数</th>
+            <th>投入阶段</th>
+            <th>核心职责</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>后端工程师（主导）</td>
+            <td><strong>2</strong></td>
+            <td>全程</td>
+            <td>OneID 引擎、接口、数据治理</td>
+          </tr>
+          <tr>
+            <td>后端工程师（辅助）</td>
+            <td><strong>1</strong></td>
+            <td>Sprint 2-7</td>
+            <td>多系统接入、联调、测试</td>
+          </tr>
+          <tr>
+            <td>前端工程师</td>
+            <td><strong>2</strong></td>
+            <td>Sprint 3-8</td>
+            <td>一户一档、治理工作流、运营看板</td>
+          </tr>
+          <tr>
+            <td>数据工程师</td>
+            <td><strong>1</strong></td>
+            <td>Sprint 2,8</td>
+            <td>数据清洗、迁移演练、质量报告</td>
+          </tr>
+          <tr>
+            <td>产品经理</td>
+            <td><strong>1</strong></td>
+            <td>全程</td>
+            <td>需求基线、UAT 组织、范围管控</td>
+          </tr>
+          <tr>
+            <td>QA 测试工程师</td>
+            <td><strong>1</strong></td>
+            <td>Sprint 5-9</td>
+            <td>集成测试、UAT 支持、回归</td>
+          </tr>
+          <tr>
+            <td>架构师 / Tech Lead</td>
+            <td><strong>0.5</strong></td>
+            <td>关键评审节点</td>
+            <td>架构评审、安全审查、决策支持</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <div class="card">
+        <h3>关键行动项（本周内）</h3>
+        <ul class="plain">
+          <li>召开 Sprint 1 启动会，确认 OneID 算法设计方案</li>
+          <li>与电商/租售团队对齐 Sprint 3 联调接口规范</li>
+          <li>产品经理确认小程序归并产品方案时间表（不晚于 5.15）</li>
+          <li>需求基线会议：冻结 Phase 1 功能范围</li>
+          <li>确认前端工程师资源到位时间</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Phase 2 候选功能（2026年Q4起）</h3>
+        <ul class="plain">
+          <li><strong style="color:#fa8c16">📊 客户运营模块</strong>（已确认不在 Phase 1 范围，Q4 排期）：运营活动管理、标签触达营销、客户分层运营看板</li>
+          <li>客户生命周期评分（入住→续租→流失预测）</li>
+          <li>开放 API 供外部合作伙伴查询</li>
+          <li>数据血缘追踪可视化</li>
+          <li>AI 辅助数据质量治理（异常自动识别）</li>
+        </ul>
+      </div>
+      <div class="danger-box" style="margin-top:0;">
+        <strong>决策截止提醒：</strong><br>
+        若 <strong>5月15日</strong> 前未确认小程序归并方案，<br>建议将该功能移出 Phase 1 范围，以保障核心上线节点不受影响。
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<div style="background:#263238;color:#90a4ae;text-align:center;padding:20px;font-size:12px;">
+  时代邻里物业管理 · 客户主数据项目组 · 内部保密文件 · 2026-04-22 生成
+</div>
+
+</body>
+</html>

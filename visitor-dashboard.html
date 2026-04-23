@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>时代邻里 · 家政访客数据分析看板</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif; background: #f0f2f5; color: #333; min-width: 375px; }
+  header { background: linear-gradient(135deg, #1677FF 0%, #0958d9 100%); color: #fff; padding: 18px 24px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 8px rgba(22,119,255,0.3); }
+  header .logo { width: 36px; height: 36px; background: rgba(255,255,255,0.25); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; }
+  header h1 { font-size: 18px; font-weight: 600; }
+  header .subtitle { font-size: 12px; opacity: 0.8; margin-top: 2px; }
+  header .badge { margin-left: auto; background: rgba(255,255,255,0.2); border-radius: 12px; padding: 4px 12px; font-size: 12px; }
+  .tabs { background: #fff; border-bottom: 1px solid #e8ecf0; display: flex; padding: 0 24px; overflow-x: auto; }
+  .tab { padding: 14px 20px; cursor: pointer; font-size: 14px; color: #666; border-bottom: 2px solid transparent; white-space: nowrap; transition: all 0.2s; }
+  .tab:hover { color: #1677FF; }
+  .tab.active { color: #1677FF; border-bottom-color: #1677FF; font-weight: 600; }
+  .panel { display: none; padding: 20px 24px; }
+  .panel.active { display: block; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 20px; }
+  .kpi-card { background: #fff; border-radius: 10px; padding: 16px 18px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); border-left: 4px solid #1677FF; }
+  .kpi-card.success { border-left-color: #52c41a; }
+  .kpi-card.warning { border-left-color: #fa8c16; }
+  .kpi-card.danger { border-left-color: #f5222d; }
+  .kpi-card.purple { border-left-color: #722ed1; }
+  .kpi-label { font-size: 12px; color: #888; margin-bottom: 6px; }
+  .kpi-value { font-size: 26px; font-weight: 700; color: #1a1a1a; line-height: 1; }
+  .kpi-sub { font-size: 12px; color: #aaa; margin-top: 4px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  @media (max-width: 700px) { .row { grid-template-columns: 1fr; } .panel { padding: 14px 12px; } }
+  .card { background: #fff; border-radius: 10px; padding: 18px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .card.full { grid-column: 1 / -1; }
+  .card-title { font-size: 14px; font-weight: 600; color: #333; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 6px; }
+  .card-title::before { content: ''; width: 3px; height: 14px; background: #1677FF; border-radius: 2px; display: inline-block; }
+  .chart-wrap { position: relative; height: 260px; }
+  .chart-wrap.tall { height: 320px; }
+  .chart-wrap.short { height: 200px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: #fafafa; color: #666; font-weight: 600; padding: 10px 12px; text-align: left; border-bottom: 1px solid #f0f0f0; }
+  td { padding: 9px 12px; border-bottom: 1px solid #f7f7f7; color: #444; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fafcff; }
+  .rate-bar { display: flex; align-items: center; gap: 6px; }
+  .rate-track { flex: 1; height: 6px; background: #f0f0f0; border-radius: 3px; overflow: hidden; }
+  .rate-fill { height: 100%; border-radius: 3px; }
+  .badge-rate { font-size: 12px; font-weight: 600; min-width: 40px; text-align: right; }
+  .alert-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .alert-card { border-radius: 8px; padding: 14px 16px; }
+  .alert-card.danger { background: #fff2f0; border: 1px solid #ffccc7; }
+  .alert-card.success { background: #f6ffed; border: 1px solid #b7eb8f; }
+  .alert-card .a-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .alert-card.danger .a-title { color: #cf1322; }
+  .alert-card.success .a-title { color: #389e0d; }
+  .alert-card .a-desc { font-size: 12px; color: #777; line-height: 1.5; }
+  .tag { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+  .tag.danger { background: #fff1f0; color: #cf1322; border: 1px solid #ffa39e; }
+  .tag.success { background: #f6ffed; color: #389e0d; border: 1px solid #b7eb8f; }
+  .tag.warning { background: #fffbe6; color: #d46b08; border: 1px solid #ffe58f; }
+  .insight { background: #e6f4ff; border-left: 3px solid #1677FF; border-radius: 0 6px 6px 0; padding: 10px 14px; font-size: 12px; color: #444; line-height: 1.6; margin-top: 12px; }
+  .insight strong { color: #1677FF; }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">邻</div>
+  <div>
+    <h1>家政访客数据分析看板</h1>
+    <div class="subtitle">时代邻里 · 数据周期：2024-11 至 2026-01</div>
+  </div>
+  <div class="badge">共 8,777 条记录</div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab(0)">区域概览</div>
+  <div class="tab" onclick="switchTab(1)">项目排名</div>
+  <div class="tab" onclick="switchTab(2)">新增分析维度</div>
+</div>
+
+<!-- TAB 1: 区域概览 -->
+<div class="panel active" id="panel-0">
+  <div class="kpi-grid">
+    <div class="kpi-card"><div class="kpi-label">总登记量</div><div class="kpi-value">8,777</div><div class="kpi-sub">2024-11 ~ 2026-01</div></div>
+    <div class="kpi-card success"><div class="kpi-label">实际到访</div><div class="kpi-value">4,830</div><div class="kpi-sub">到访率 55.0%</div></div>
+    <div class="kpi-card warning"><div class="kpi-label">未到访</div><div class="kpi-value">3,947</div><div class="kpi-sub">占比 45.0%</div></div>
+    <div class="kpi-card purple"><div class="kpi-label">覆盖项目</div><div class="kpi-value">145</div><div class="kpi-sub">个小区</div></div>
+    <div class="kpi-card"><div class="kpi-label">覆盖区域</div><div class="kpi-value">6</div><div class="kpi-sub">个区域公司</div></div>
+    <div class="kpi-card success"><div class="kpi-label">平均日登记</div><div class="kpi-value">17.8</div><div class="kpi-sub">条/天（约493天）</div></div>
+  </div>
+  <div class="row">
+    <div class="card full">
+      <div class="card-title">区域公司访客登记量 &amp; 到访率对比</div>
+      <div class="chart-wrap"><canvas id="chart-region"></canvas></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">区域公司数据明细</div>
+    <table>
+      <thead><tr><th>区域公司</th><th>项目数</th><th>总访客数</th><th>均/项目</th><th>最高单项目</th><th>日均最高</th><th>密度等级</th></tr></thead>
+      <tbody>
+        <tr><td>广州区域公司</td><td>42</td><td>2,636</td><td>62.8</td><td>701</td><td>1.92</td><td><span class="tag warning">低密度</span></td></tr>
+        <tr><td>佛清肇区域公司</td><td>42</td><td>1,109</td><td>26.4</td><td>425</td><td>1.16</td><td><span class="tag warning">低密度</span></td></tr>
+        <tr><td>粤西区域公司</td><td>22</td><td>480</td><td>21.8</td><td>139</td><td>0.38</td><td><span class="tag warning">低密度</span></td></tr>
+        <tr><td>粤东区域公司</td><td>13</td><td>259</td><td>19.9</td><td>183</td><td>0.50</td><td><span class="tag warning">低密度</span></td></tr>
+        <tr><td>华中区域公司</td><td>5</td><td>8</td><td>1.6</td><td>3</td><td>0.01</td><td><span class="tag warning">低密度</span></td></tr>
+        <tr><td>合达联行</td><td>2</td><td>2</td><td>1.0</td><td>1</td><td>0.003</td><td><span class="tag warning">低密度</span></td></tr>
+      </tbody>
+    </table>
+    <div class="insight">
+      <strong>洞察：</strong>广州区域公司以 2,636 条登记领跑全体（占比 52.9%），人均项目密度为 62.8，远高于其他区域。佛清肇区域项目数与广州持平，但访客量仅为广州的 42%，反映出区域使用深度差异显著。华中及合达联行体量极小，或处于业务导入初期。
+    </div>
+  </div>
+</div>
+
+<!-- TAB 2: 项目排名 -->
+<div class="panel" id="panel-1">
+  <div class="row">
+    <div class="card full">
+      <div class="card-title">Top 15 项目 — 登记量排名（颜色反映到访率）</div>
+      <div class="chart-wrap tall"><canvas id="chart-top15"></canvas></div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="card">
+      <div class="card-title">到访率区间分布</div>
+      <div class="chart-wrap short"><canvas id="chart-rate-dist"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">到访方式构成</div>
+      <div class="chart-wrap short"><canvas id="chart-method"></canvas></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">项目明细表（Top 15，含到访率色标）</div>
+    <table>
+      <thead><tr><th>#</th><th>项目名称</th><th>登记量</th><th>到访数</th><th>到访率</th></tr></thead>
+      <tbody id="top15-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- TAB 3: 新增分析维度 -->
+<div class="panel" id="panel-2">
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-title">月度登记趋势（2024-11 ~ 2025-12）</div>
+    <div class="chart-wrap"><canvas id="chart-monthly"></canvas></div>
+    <div class="insight"><strong>洞察：</strong>2025-04 达到峰值 788 条，可能与春季装修旺季相关。2024-12 及 2025-02 出现阶段性低谷，符合元旦/春节假期规律。整体呈现季节性波动，四季度有趋势性下行。</div>
+  </div>
+  <div class="row">
+    <div class="card">
+      <div class="card-title">星期登记分布</div>
+      <div class="chart-wrap short"><canvas id="chart-weekday"></canvas></div>
+      <div class="insight" style="margin-top:10px"><strong>洞察：</strong>周末（周六 1,446 / 周日 1,436）登记量比工作日均值（1,179）高约 <strong>22%</strong>，但到访率周中（55-57%）略高于周末（54%），说明周末预约多、履约率偏低。</div>
+    </div>
+    <div class="card">
+      <div class="card-title">时段登记热力（8-18时）</div>
+      <div class="chart-wrap short"><canvas id="chart-hour"></canvas></div>
+      <div class="insight" style="margin-top:10px"><strong>洞察：</strong>早 <strong>8 时</strong>为全天最高峰（1,416 条，占 19%），13 时为午后次高峰（953 条），呈明显 <strong>双峰特征</strong>。18 时后急剧下降，可参考此规律合理排班。</div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="card">
+      <div class="card-title">异常项目预警（到访率异常）</div>
+      <div class="alert-grid">
+        <div class="alert-card danger"><div class="a-title">时代玫瑰园（广州）二期</div><div class="a-desc">213 条登记，<strong>到访率 0.0%</strong><br>疑似系统数据回流异常，建议核查门禁对接。</div></div>
+        <div class="alert-card danger"><div class="a-title">时代倾城（东莞）</div><div class="a-desc">184 条登记，<strong>到访率 0.0%</strong><br>疑似系统数据回流异常，建议核查门禁对接。</div></div>
+        <div class="alert-card danger"><div class="a-title">创造服务（广州）</div><div class="a-desc">378 条登记，<strong>到访率 0.5%</strong>（仅 2 条到访）<br>疑似测试数据或系统问题，建议清洗处理。</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">运营标杆项目（到访率 &gt;90%）</div>
+      <div class="alert-grid">
+        <div class="alert-card success"><div class="a-title">时代倾城（顺德）</div><div class="a-desc">127 条登记，到访率 <strong>100.0%</strong><br>完美履约，可作为标杆推广经验。</div></div>
+        <div class="alert-card success"><div class="a-title">时代山湖海·兼得（珠海）</div><div class="a-desc">113 条登记，到访率 <strong>97.3%</strong><br>高履约率，运营规范执行优秀。</div></div>
+        <div class="alert-card success"><div class="a-title">时代领峰（佛山）</div><div class="a-desc">979 条登记，到访率 <strong>95.5%</strong><br>高体量 + 高到访率，综合表现最佳。</div></div>
+        <div class="alert-card success"><div class="a-title">时代倾城（清远）翠峰园</div><div class="a-desc">169 条登记，到访率 <strong>91.1%</strong><br>清远区域表现突出，值得借鉴。</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const COLOR = { primary:'#1677FF', success:'#52c41a', warning:'#fa8c16', danger:'#f5222d', purple:'#722ed1', light:'#e6f4ff' };
+
+// Chart instances store for destroy-on-switch
+const charts = {};
+
+function destroyCharts(...ids) {
+  ids.forEach(id => { if (charts[id]) { charts[id].destroy(); delete charts[id]; } });
+}
+
+function switchTab(idx) {
+  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+  document.querySelectorAll('.panel').forEach((p, i) => p.classList.toggle('active', i === idx));
+  if (idx === 0) buildTab0();
+  if (idx === 1) buildTab1();
+  if (idx === 2) buildTab2();
+}
+
+// ---- TAB 0 ----
+function buildTab0() {
+  destroyCharts('chart-region');
+  const ctx = document.getElementById('chart-region').getContext('2d');
+  const labels = ['广州区域公司','佛清肇区域公司','粤西区域公司','粤东区域公司','华中区域公司','合达联行'];
+  const totals = [2636, 1109, 480, 259, 8, 2];
+  const rates  = [null, null, null, null, null, null]; // rates not provided per region, show placeholder
+  charts['chart-region'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: '总访客数',
+        data: totals,
+        backgroundColor: [COLOR.primary,'#4096ff','#69b1ff','#91caff','#bae0ff','#e6f4ff'],
+        borderRadius: 4,
+        yAxisID: 'y'
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` 总访客数：${ctx.parsed.y.toLocaleString()}` } } },
+      scales: {
+        y: { beginAtZero: true, grid: { color: '#f5f5f5' }, ticks: { callback: v => v.toLocaleString() } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+}
+
+// ---- TAB 1 ----
+const top15 = [
+  { name:'时代外滩（广州）',         reg:1551, visit:1002, rate:64.6 },
+  { name:'时代香海彼岸（广州）',      reg:1023, visit:436,  rate:42.6 },
+  { name:'时代领峰（佛山）',          reg:979,  visit:935,  rate:95.5 },
+  { name:'珠江花园（广州）',          reg:652,  visit:541,  rate:83.0 },
+  { name:'创造服务（广州）',          reg:378,  visit:2,    rate:0.5  },
+  { name:'时代天逸（广州）',          reg:328,  visit:263,  rate:80.2 },
+  { name:'时代玫瑰园（广州）二期',    reg:213,  visit:0,    rate:0.0  },
+  { name:'时代南湾（广州）',          reg:211,  visit:113,  rate:53.6 },
+  { name:'时代倾城（东莞）',          reg:184,  visit:0,    rate:0.0  },
+  { name:'时代倾城（清远）翠峰园',    reg:169,  visit:154,  rate:91.1 },
+  { name:'时代依云花园',              reg:158,  visit:87,   rate:55.1 },
+  { name:'时代云来（中山）',          reg:139,  visit:118,  rate:84.9 },
+  { name:'时代倾城（顺德）',          reg:127,  visit:127,  rate:100.0},
+  { name:'时代山湖海·兼得（珠海）',   reg:113,  visit:110,  rate:97.3 },
+  { name:'时代长岛（广州）',          reg:107,  visit:72,   rate:67.3 },
+];
+
+function rateColor(r) {
+  if (r >= 80) return COLOR.success;
+  if (r >= 50) return COLOR.primary;
+  if (r >= 20) return COLOR.warning;
+  return COLOR.danger;
+}
+
+function buildTab1() {
+  destroyCharts('chart-top15','chart-rate-dist','chart-method');
+
+  // Top15 horizontal bar
+  const ctx1 = document.getElementById('chart-top15').getContext('2d');
+  const rev = [...top15].reverse();
+  charts['chart-top15'] = new Chart(ctx1, {
+    type: 'bar',
+    data: {
+      labels: rev.map(d => d.name),
+      datasets: [{
+        label: '登记量',
+        data: rev.map(d => d.reg),
+        backgroundColor: rev.map(d => rateColor(d.rate)),
+        borderRadius: 3
+      }]
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: c => ` 登记量：${c.parsed.x}  到访率：${rev[c.dataIndex].rate}%` } }
+      },
+      scales: { x: { beginAtZero: true, grid: { color:'#f5f5f5' } }, y: { grid: { display:false }, ticks: { font: { size: 11 } } } }
+    }
+  });
+
+  // Rate distribution
+  const ctx2 = document.getElementById('chart-rate-dist').getContext('2d');
+  const buckets = [0,0,0,0];
+  top15.forEach(d => { if(d.rate<20) buckets[0]++; else if(d.rate<50) buckets[1]++; else if(d.rate<80) buckets[2]++; else buckets[3]++; });
+  charts['chart-rate-dist'] = new Chart(ctx2, {
+    type: 'doughnut',
+    data: {
+      labels:['0-20%','20-50%','50-80%','80-100%'],
+      datasets:[{ data:buckets, backgroundColor:[COLOR.danger,COLOR.warning,COLOR.primary,COLOR.success], borderWidth:2 }]
+    },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{ font:{size:11} } } } }
+  });
+
+  // Visit method
+  const ctx3 = document.getElementById('chart-method').getContext('2d');
+  charts['chart-method'] = new Chart(ctx3, {
+    type: 'pie',
+    data: {
+      labels:['访客登记','门岗登记','业主邀请'],
+      datasets:[{ data:[7614,625,538], backgroundColor:[COLOR.primary, COLOR.success, COLOR.warning], borderWidth:2 }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ position:'bottom', labels:{ font:{size:11} } }, tooltip:{ callbacks:{ label: c=>` ${c.label}：${c.parsed.toLocaleString()} 条` } } }
+    }
+  });
+
+  // Table
+  const tbody = document.getElementById('top15-tbody');
+  tbody.innerHTML = top15.map((d,i)=>{
+    const color = rateColor(d.rate);
+    return `<tr>
+      <td>${i+1}</td>
+      <td>${d.name}</td>
+      <td>${d.reg.toLocaleString()}</td>
+      <td>${d.visit.toLocaleString()}</td>
+      <td><div class="rate-bar"><div class="rate-track"><div class="rate-fill" style="width:${d.rate}%;background:${color}"></div></div><span class="badge-rate" style="color:${color}">${d.rate}%</span></div></td>
+    </tr>`;
+  }).join('');
+}
+
+// ---- TAB 2 ----
+function buildTab2() {
+  destroyCharts('chart-monthly','chart-weekday','chart-hour');
+
+  // Monthly
+  const ctx1 = document.getElementById('chart-monthly').getContext('2d');
+  charts['chart-monthly'] = new Chart(ctx1, {
+    type: 'line',
+    data: {
+      labels:['2024-11','2024-12','2025-01','2025-02','2025-03','2025-04','2025-05','2025-06','2025-07','2025-08','2025-09','2025-10','2025-11','2025-12'],
+      datasets:[{
+        label:'月度登记量',
+        data:[489,375,281,195,417,788,565,567,446,377,304,300,291,153],
+        borderColor:COLOR.primary, backgroundColor:'rgba(22,119,255,0.08)',
+        tension:0.4, fill:true, pointBackgroundColor:COLOR.primary, pointRadius:4
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false} },
+      scales:{ y:{ beginAtZero:false, grid:{color:'#f5f5f5'} }, x:{ grid:{display:false} } }
+    }
+  });
+
+  // Weekday
+  const ctx2 = document.getElementById('chart-weekday').getContext('2d');
+  charts['chart-weekday'] = new Chart(ctx2, {
+    type:'bar',
+    data:{
+      labels:['周一','周二','周三','周四','周五','周六','周日'],
+      datasets:[{ label:'登记量', data:[1188,1211,1259,1109,1128,1446,1436], backgroundColor:[COLOR.primary,COLOR.primary,COLOR.primary,COLOR.primary,COLOR.primary,'#ff7a45','#ff7a45'], borderRadius:4 }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false} },
+      scales:{ y:{beginAtZero:true,grid:{color:'#f5f5f5'}}, x:{grid:{display:false}} }
+    }
+  });
+
+  // Hourly
+  const ctx3 = document.getElementById('chart-hour').getContext('2d');
+  const hourData = [1416,1043,702,511,574,953,857,602,443,345,265];
+  const hourColors = hourData.map(v => v >= 900 ? COLOR.danger : v >= 600 ? COLOR.warning : COLOR.primary);
+  charts['chart-hour'] = new Chart(ctx3, {
+    type:'bar',
+    data:{
+      labels:['8时','9时','10时','11时','12时','13时','14时','15时','16时','17时','18时'],
+      datasets:[{ label:'登记量', data:hourData, backgroundColor:hourColors, borderRadius:3 }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false} },
+      scales:{ y:{beginAtZero:true,grid:{color:'#f5f5f5'}}, x:{grid:{display:false}} }
+    }
+  });
+}
+
+// Init first tab
+buildTab0();
+</script>
+</body>
+</html>

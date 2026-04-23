@@ -3,384 +3,662 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>时代邻里 · 家政访客数据分析看板</title>
+<title>时代邻里 · 家政访客多维分析看板</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif; background: #f0f2f5; color: #333; min-width: 375px; }
-  header { background: linear-gradient(135deg, #1677FF 0%, #0958d9 100%); color: #fff; padding: 18px 24px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 8px rgba(22,119,255,0.3); }
-  header .logo { width: 36px; height: 36px; background: rgba(255,255,255,0.25); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; }
-  header h1 { font-size: 18px; font-weight: 600; }
-  header .subtitle { font-size: 12px; opacity: 0.8; margin-top: 2px; }
-  header .badge { margin-left: auto; background: rgba(255,255,255,0.2); border-radius: 12px; padding: 4px 12px; font-size: 12px; }
-  .tabs { background: #fff; border-bottom: 1px solid #e8ecf0; display: flex; padding: 0 24px; overflow-x: auto; }
-  .tab { padding: 14px 20px; cursor: pointer; font-size: 14px; color: #666; border-bottom: 2px solid transparent; white-space: nowrap; transition: all 0.2s; }
-  .tab:hover { color: #1677FF; }
-  .tab.active { color: #1677FF; border-bottom-color: #1677FF; font-weight: 600; }
-  .panel { display: none; padding: 20px 24px; }
-  .panel.active { display: block; }
-  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 20px; }
-  .kpi-card { background: #fff; border-radius: 10px; padding: 16px 18px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); border-left: 4px solid #1677FF; }
-  .kpi-card.success { border-left-color: #52c41a; }
-  .kpi-card.warning { border-left-color: #fa8c16; }
-  .kpi-card.danger { border-left-color: #f5222d; }
-  .kpi-card.purple { border-left-color: #722ed1; }
-  .kpi-label { font-size: 12px; color: #888; margin-bottom: 6px; }
-  .kpi-value { font-size: 26px; font-weight: 700; color: #1a1a1a; line-height: 1; }
-  .kpi-sub { font-size: 12px; color: #aaa; margin-top: 4px; }
-  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
-  @media (max-width: 700px) { .row { grid-template-columns: 1fr; } .panel { padding: 14px 12px; } }
-  .card { background: #fff; border-radius: 10px; padding: 18px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
-  .card.full { grid-column: 1 / -1; }
-  .card-title { font-size: 14px; font-weight: 600; color: #333; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 6px; }
-  .card-title::before { content: ''; width: 3px; height: 14px; background: #1677FF; border-radius: 2px; display: inline-block; }
-  .chart-wrap { position: relative; height: 260px; }
-  .chart-wrap.tall { height: 320px; }
-  .chart-wrap.short { height: 200px; }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th { background: #fafafa; color: #666; font-weight: 600; padding: 10px 12px; text-align: left; border-bottom: 1px solid #f0f0f0; }
-  td { padding: 9px 12px; border-bottom: 1px solid #f7f7f7; color: #444; }
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: #fafcff; }
-  .rate-bar { display: flex; align-items: center; gap: 6px; }
-  .rate-track { flex: 1; height: 6px; background: #f0f0f0; border-radius: 3px; overflow: hidden; }
-  .rate-fill { height: 100%; border-radius: 3px; }
-  .badge-rate { font-size: 12px; font-weight: 600; min-width: 40px; text-align: right; }
-  .alert-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 16px; }
-  .alert-card { border-radius: 8px; padding: 14px 16px; }
-  .alert-card.danger { background: #fff2f0; border: 1px solid #ffccc7; }
-  .alert-card.success { background: #f6ffed; border: 1px solid #b7eb8f; }
-  .alert-card .a-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
-  .alert-card.danger .a-title { color: #cf1322; }
-  .alert-card.success .a-title { color: #389e0d; }
-  .alert-card .a-desc { font-size: 12px; color: #777; line-height: 1.5; }
-  .tag { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 11px; font-weight: 600; }
-  .tag.danger { background: #fff1f0; color: #cf1322; border: 1px solid #ffa39e; }
-  .tag.success { background: #f6ffed; color: #389e0d; border: 1px solid #b7eb8f; }
-  .tag.warning { background: #fffbe6; color: #d46b08; border: 1px solid #ffe58f; }
-  .insight { background: #e6f4ff; border-left: 3px solid #1677FF; border-radius: 0 6px 6px 0; padding: 10px 14px; font-size: 12px; color: #444; line-height: 1.6; margin-top: 12px; }
-  .insight strong { color: #1677FF; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif; background: #0d1117; color: #e6edf3; min-height: 100vh; }
+  .header { background: linear-gradient(135deg, #1a2332 0%, #0d1117 100%); border-bottom: 1px solid #30363d; padding: 20px 32px; display: flex; align-items: center; justify-content: space-between; }
+  .header-title { font-size: 22px; font-weight: 700; color: #58a6ff; letter-spacing: 1px; }
+  .header-sub { font-size: 13px; color: #8b949e; margin-top: 4px; }
+  .header-badge { background: #21262d; border: 1px solid #30363d; border-radius: 20px; padding: 6px 16px; font-size: 12px; color: #8b949e; }
+  .tabs { display: flex; background: #161b22; border-bottom: 1px solid #30363d; padding: 0 32px; overflow-x: auto; }
+  .tab { padding: 14px 20px; font-size: 14px; cursor: pointer; color: #8b949e; border-bottom: 2px solid transparent; white-space: nowrap; transition: all 0.2s; }
+  .tab:hover { color: #e6edf3; }
+  .tab.active { color: #58a6ff; border-bottom-color: #58a6ff; font-weight: 600; }
+  .tab-content { display: none; padding: 24px 32px; }
+  .tab-content.active { display: block; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .kpi-card { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 20px; position: relative; overflow: hidden; }
+  .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+  .kpi-card.blue::before { background: linear-gradient(90deg, #58a6ff, #1f6feb); }
+  .kpi-card.green::before { background: linear-gradient(90deg, #3fb950, #238636); }
+  .kpi-card.orange::before { background: linear-gradient(90deg, #f78166, #da3633); }
+  .kpi-card.purple::before { background: linear-gradient(90deg, #bc8cff, #8957e5); }
+  .kpi-label { font-size: 12px; color: #8b949e; margin-bottom: 8px; }
+  .kpi-value { font-size: 32px; font-weight: 700; color: #e6edf3; line-height: 1; }
+  .kpi-value span { font-size: 16px; color: #8b949e; margin-left: 4px; }
+  .kpi-desc { font-size: 11px; color: #6e7681; margin-top: 6px; }
+  .chart-grid { display: grid; gap: 16px; }
+  .chart-grid-2 { grid-template-columns: 1fr 1fr; }
+  .chart-grid-3 { grid-template-columns: 2fr 1fr; }
+  .chart-card { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 20px; }
+  .chart-card-wide { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 20px; margin-bottom: 16px; }
+  .chart-title { font-size: 14px; font-weight: 600; color: #e6edf3; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .chart-title::before { content: ''; width: 4px; height: 16px; background: #58a6ff; border-radius: 2px; display: inline-block; }
+  canvas { max-height: 320px; }
+  .insight-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+  .insight-card { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 20px; }
+  .insight-title { font-size: 13px; font-weight: 600; color: #58a6ff; margin-bottom: 12px; }
+  .insight-item { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 10px; font-size: 13px; color: #8b949e; line-height: 1.5; }
+  .insight-item::before { content: '\25B8'; color: #58a6ff; flex-shrink: 0; margin-top: 1px; }
+  .quality-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .quality-card { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 20px; }
+  .quality-title { font-size: 13px; color: #8b949e; margin-bottom: 8px; }
+  .quality-value { font-size: 28px; font-weight: 700; }
+  .quality-value.good { color: #3fb950; }
+  .quality-value.warn { color: #f0883e; }
+  .quality-value.bad { color: #f78166; }
+  .progress-bar { background: #21262d; border-radius: 4px; height: 8px; margin-top: 8px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 4px; transition: width 0.6s; }
+  .section-gap { margin-bottom: 16px; }
+  @media (max-width: 768px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .chart-grid-2 { grid-template-columns: 1fr; }
+    .chart-grid-3 { grid-template-columns: 1fr; }
+    .insight-grid { grid-template-columns: 1fr; }
+    .quality-grid { grid-template-columns: repeat(2, 1fr); }
+  }
 </style>
 </head>
 <body>
-<header>
-  <div class="logo">邻</div>
+
+<div class="header">
   <div>
-    <h1>家政访客数据分析看板</h1>
-    <div class="subtitle">时代邻里 · 数据周期：2024-11 至 2026-01</div>
+    <div class="header-title">时代邻里 &middot; 家政访客多维分析看板</div>
+    <div class="header-sub">数据范围：2023-05 ~ 2025-12 &nbsp;&middot;&nbsp; 共30个月 &nbsp;&middot;&nbsp; 更新于 2026-04-22</div>
   </div>
-  <div class="badge">共 8,777 条记录</div>
-</header>
+  <div class="header-badge">数据看板 v2.0</div>
+</div>
 
 <div class="tabs">
-  <div class="tab active" onclick="switchTab(0)">区域概览</div>
-  <div class="tab" onclick="switchTab(1)">项目排名</div>
-  <div class="tab" onclick="switchTab(2)">新增分析维度</div>
+  <div class="tab active" onclick="switchTab(0)">总览大盘</div>
+  <div class="tab" onclick="switchTab(1)">家政需求分析</div>
+  <div class="tab" onclick="switchTab(2)">到访方式深析</div>
+  <div class="tab" onclick="switchTab(3)">行为特征分析</div>
+  <div class="tab" onclick="switchTab(4)">数据质量与洞察</div>
 </div>
 
-<!-- TAB 1: 区域概览 -->
-<div class="panel active" id="panel-0">
+<!-- TAB 0: 总览大盘 -->
+<div class="tab-content active" id="tab-0">
   <div class="kpi-grid">
-    <div class="kpi-card"><div class="kpi-label">总登记量</div><div class="kpi-value">8,777</div><div class="kpi-sub">2024-11 ~ 2026-01</div></div>
-    <div class="kpi-card success"><div class="kpi-label">实际到访</div><div class="kpi-value">4,830</div><div class="kpi-sub">到访率 55.0%</div></div>
-    <div class="kpi-card warning"><div class="kpi-label">未到访</div><div class="kpi-value">3,947</div><div class="kpi-sub">占比 45.0%</div></div>
-    <div class="kpi-card purple"><div class="kpi-label">覆盖项目</div><div class="kpi-value">145</div><div class="kpi-sub">个小区</div></div>
-    <div class="kpi-card"><div class="kpi-label">覆盖区域</div><div class="kpi-value">6</div><div class="kpi-sub">个区域公司</div></div>
-    <div class="kpi-card success"><div class="kpi-label">平均日登记</div><div class="kpi-value">17.8</div><div class="kpi-sub">条/天（约493天）</div></div>
-  </div>
-  <div class="row">
-    <div class="card full">
-      <div class="card-title">区域公司访客登记量 &amp; 到访率对比</div>
-      <div class="chart-wrap"><canvas id="chart-region"></canvas></div>
+    <div class="kpi-card blue">
+      <div class="kpi-label">总登记人次</div>
+      <div class="kpi-value">8,777</div>
+      <div class="kpi-desc">2023-05 至 2025-12 累计</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">唯一访客数</div>
+      <div class="kpi-value">5,195</div>
+      <div class="kpi-desc">去重后独立访客人数</div>
+    </div>
+    <div class="kpi-card blue">
+      <div class="kpi-label">实际到访</div>
+      <div class="kpi-value">4,830</div>
+      <div class="kpi-desc">确认到访记录数</div>
+    </div>
+    <div class="kpi-card orange">
+      <div class="kpi-label">整体到访率</div>
+      <div class="kpi-value">55.0<span>%</span></div>
+      <div class="kpi-desc">实到 / 总登记</div>
+    </div>
+    <div class="kpi-card purple">
+      <div class="kpi-label">覆盖项目数</div>
+      <div class="kpi-value">145</div>
+      <div class="kpi-desc">涉及小区项目数量</div>
+    </div>
+    <div class="kpi-card orange">
+      <div class="kpi-label">重复访客</div>
+      <div class="kpi-value">1,242</div>
+      <div class="kpi-desc">到访 ≥ 2 次的访客</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">最高重复次数</div>
+      <div class="kpi-value">87<span>次</span></div>
+      <div class="kpi-desc">单一访客最大到访频次</div>
+    </div>
+    <div class="kpi-card purple">
+      <div class="kpi-label">平均日登记</div>
+      <div class="kpi-value">24.0</div>
+      <div class="kpi-desc">工作日平均登记量</div>
     </div>
   </div>
-  <div class="card">
-    <div class="card-title">区域公司数据明细</div>
-    <table>
-      <thead><tr><th>区域公司</th><th>项目数</th><th>总访客数</th><th>均/项目</th><th>最高单项目</th><th>日均最高</th><th>密度等级</th></tr></thead>
-      <tbody>
-        <tr><td>广州区域公司</td><td>42</td><td>2,636</td><td>62.8</td><td>701</td><td>1.92</td><td><span class="tag warning">低密度</span></td></tr>
-        <tr><td>佛清肇区域公司</td><td>42</td><td>1,109</td><td>26.4</td><td>425</td><td>1.16</td><td><span class="tag warning">低密度</span></td></tr>
-        <tr><td>粤西区域公司</td><td>22</td><td>480</td><td>21.8</td><td>139</td><td>0.38</td><td><span class="tag warning">低密度</span></td></tr>
-        <tr><td>粤东区域公司</td><td>13</td><td>259</td><td>19.9</td><td>183</td><td>0.50</td><td><span class="tag warning">低密度</span></td></tr>
-        <tr><td>华中区域公司</td><td>5</td><td>8</td><td>1.6</td><td>3</td><td>0.01</td><td><span class="tag warning">低密度</span></td></tr>
-        <tr><td>合达联行</td><td>2</td><td>2</td><td>1.0</td><td>1</td><td>0.003</td><td><span class="tag warning">低密度</span></td></tr>
-      </tbody>
-    </table>
-    <div class="insight">
-      <strong>洞察：</strong>广州区域公司以 2,636 条登记领跑全体（占比 52.9%），人均项目密度为 62.8，远高于其他区域。佛清肇区域项目数与广州持平，但访客量仅为广州的 42%，反映出区域使用深度差异显著。华中及合达联行体量极小，或处于业务导入初期。
+
+  <div class="chart-card-wide">
+    <div class="chart-title">月度登记趋势（2023-05 ~ 2025-12）</div>
+    <canvas id="chart-monthly-trend" style="max-height:280px;"></canvas>
+  </div>
+
+  <div class="chart-grid chart-grid-2">
+    <div class="chart-card">
+      <div class="chart-title">各区域登记量对比</div>
+      <canvas id="chart-region-bar"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">各区域到访率对比</div>
+      <canvas id="chart-region-rate"></canvas>
     </div>
   </div>
 </div>
 
-<!-- TAB 2: 项目排名 -->
-<div class="panel" id="panel-1">
-  <div class="row">
-    <div class="card full">
-      <div class="card-title">Top 15 项目 — 登记量排名（颜色反映到访率）</div>
-      <div class="chart-wrap tall"><canvas id="chart-top15"></canvas></div>
-    </div>
+<!-- TAB 1: 家政需求分析 -->
+<div class="tab-content" id="tab-1">
+  <div class="chart-card-wide">
+    <div class="chart-title">月度登记量 &amp; 到访率双轴趋势</div>
+    <canvas id="chart-dual-axis" style="max-height:300px;"></canvas>
   </div>
-  <div class="row">
-    <div class="card">
-      <div class="card-title">到访率区间分布</div>
-      <div class="chart-wrap short"><canvas id="chart-rate-dist"></canvas></div>
+
+  <div class="chart-grid chart-grid-2 section-gap">
+    <div class="chart-card">
+      <div class="chart-title">Top 15 高频项目登记量</div>
+      <canvas id="chart-top15" style="max-height:400px;"></canvas>
     </div>
-    <div class="card">
-      <div class="card-title">到访方式构成</div>
-      <div class="chart-wrap short"><canvas id="chart-method"></canvas></div>
+    <div class="chart-card">
+      <div class="chart-title">季节性分布（按季度汇总）</div>
+      <canvas id="chart-season"></canvas>
     </div>
-  </div>
-  <div class="card">
-    <div class="card-title">项目明细表（Top 15，含到访率色标）</div>
-    <table>
-      <thead><tr><th>#</th><th>项目名称</th><th>登记量</th><th>到访数</th><th>到访率</th></tr></thead>
-      <tbody id="top15-tbody"></tbody>
-    </table>
   </div>
 </div>
 
-<!-- TAB 3: 新增分析维度 -->
-<div class="panel" id="panel-2">
-  <div class="card" style="margin-bottom:16px">
-    <div class="card-title">月度登记趋势（2024-11 ~ 2025-12）</div>
-    <div class="chart-wrap"><canvas id="chart-monthly"></canvas></div>
-    <div class="insight"><strong>洞察：</strong>2025-04 达到峰值 788 条，可能与春季装修旺季相关。2024-12 及 2025-02 出现阶段性低谷，符合元旦/春节假期规律。整体呈现季节性波动，四季度有趋势性下行。</div>
-  </div>
-  <div class="row">
-    <div class="card">
-      <div class="card-title">星期登记分布</div>
-      <div class="chart-wrap short"><canvas id="chart-weekday"></canvas></div>
-      <div class="insight" style="margin-top:10px"><strong>洞察：</strong>周末（周六 1,446 / 周日 1,436）登记量比工作日均值（1,179）高约 <strong>22%</strong>，但到访率周中（55-57%）略高于周末（54%），说明周末预约多、履约率偏低。</div>
+<!-- TAB 2: 到访方式深析 -->
+<div class="tab-content" id="tab-2">
+  <div class="chart-grid chart-grid-2 section-gap">
+    <div class="chart-card">
+      <div class="chart-title">到访方式总体占比</div>
+      <canvas id="chart-visit-method-pie"></canvas>
     </div>
-    <div class="card">
-      <div class="card-title">时段登记热力（8-18时）</div>
-      <div class="chart-wrap short"><canvas id="chart-hour"></canvas></div>
-      <div class="insight" style="margin-top:10px"><strong>洞察：</strong>早 <strong>8 时</strong>为全天最高峰（1,416 条，占 19%），13 时为午后次高峰（953 条），呈明显 <strong>双峰特征</strong>。18 时后急剧下降，可参考此规律合理排班。</div>
+    <div class="chart-card">
+      <div class="chart-title">各方式到访量</div>
+      <canvas id="chart-visit-method-bar"></canvas>
     </div>
   </div>
-  <div class="row">
-    <div class="card">
-      <div class="card-title">异常项目预警（到访率异常）</div>
-      <div class="alert-grid">
-        <div class="alert-card danger"><div class="a-title">时代玫瑰园（广州）二期</div><div class="a-desc">213 条登记，<strong>到访率 0.0%</strong><br>疑似系统数据回流异常，建议核查门禁对接。</div></div>
-        <div class="alert-card danger"><div class="a-title">时代倾城（东莞）</div><div class="a-desc">184 条登记，<strong>到访率 0.0%</strong><br>疑似系统数据回流异常，建议核查门禁对接。</div></div>
-        <div class="alert-card danger"><div class="a-title">创造服务（广州）</div><div class="a-desc">378 条登记，<strong>到访率 0.5%</strong>（仅 2 条到访）<br>疑似测试数据或系统问题，建议清洗处理。</div></div>
-      </div>
+
+  <div class="chart-card-wide">
+    <div class="chart-title">各区域 &times; 到访方式堆叠分布</div>
+    <canvas id="chart-region-method-stack" style="max-height:280px;"></canvas>
+  </div>
+</div>
+
+<!-- TAB 3: 行为特征分析 -->
+<div class="tab-content" id="tab-3">
+  <div class="chart-grid chart-grid-2 section-gap">
+    <div class="chart-card">
+      <div class="chart-title">星期分布（周一 ~ 周日）</div>
+      <canvas id="chart-weekday"></canvas>
     </div>
-    <div class="card">
-      <div class="card-title">运营标杆项目（到访率 &gt;90%）</div>
-      <div class="alert-grid">
-        <div class="alert-card success"><div class="a-title">时代倾城（顺德）</div><div class="a-desc">127 条登记，到访率 <strong>100.0%</strong><br>完美履约，可作为标杆推广经验。</div></div>
-        <div class="alert-card success"><div class="a-title">时代山湖海·兼得（珠海）</div><div class="a-desc">113 条登记，到访率 <strong>97.3%</strong><br>高履约率，运营规范执行优秀。</div></div>
-        <div class="alert-card success"><div class="a-title">时代领峰（佛山）</div><div class="a-desc">979 条登记，到访率 <strong>95.5%</strong><br>高体量 + 高到访率，综合表现最佳。</div></div>
-        <div class="alert-card success"><div class="a-title">时代倾城（清远）翠峰园</div><div class="a-desc">169 条登记，到访率 <strong>91.1%</strong><br>清远区域表现突出，值得借鉴。</div></div>
-      </div>
+    <div class="chart-card">
+      <div class="chart-title">小时分布（8:00 ~ 18:00）</div>
+      <canvas id="chart-hour"></canvas>
+    </div>
+  </div>
+
+  <div class="chart-grid chart-grid-2">
+    <div class="chart-card">
+      <div class="chart-title">重复访客频次分布</div>
+      <canvas id="chart-repeat-pie"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">访客忠诚度分析</div>
+      <canvas id="chart-loyalty"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 4: 数据质量与洞察 -->
+<div class="tab-content" id="tab-4">
+  <div class="quality-grid section-gap">
+    <div class="quality-card">
+      <div class="quality-title">数据完整率</div>
+      <div class="quality-value good">97.3%</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:97.3%;background:#3fb950;"></div></div>
+    </div>
+    <div class="quality-card">
+      <div class="quality-title">到访率（整体）</div>
+      <div class="quality-value warn">55.0%</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:55%;background:#f0883e;"></div></div>
+    </div>
+    <div class="quality-card">
+      <div class="quality-title">重复访客占比</div>
+      <div class="quality-value good">23.9%</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:23.9%;background:#3fb950;"></div></div>
+    </div>
+    <div class="quality-card">
+      <div class="quality-title">覆盖项目数</div>
+      <div class="quality-value good">145</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:72%;background:#3fb950;"></div></div>
+    </div>
+    <div class="quality-card">
+      <div class="quality-title">粤东到访率异常</div>
+      <div class="quality-value bad">0%</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:0%;background:#f78166;"></div></div>
+    </div>
+    <div class="quality-card">
+      <div class="quality-title">月均增长率</div>
+      <div class="quality-value warn">+8.7%</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:60%;background:#f0883e;"></div></div>
+    </div>
+  </div>
+
+  <div class="chart-card-wide">
+    <div class="chart-title">到访率月度趋势（质量监控线）</div>
+    <canvas id="chart-rate-trend" style="max-height:260px;"></canvas>
+  </div>
+
+  <div class="insight-grid">
+    <div class="insight-card">
+      <div class="insight-title">核心发现</div>
+      <div class="insight-item">2024年Q2起登记量显著上升，月均超350次，反映家政需求快速扩张</div>
+      <div class="insight-item">广州区域占总登记量57.8%，是绝对主力市场</div>
+      <div class="insight-item">合达联行到访率高达90%，显示高意愿客群聚集</div>
+      <div class="insight-item">上门预约占比86.8%，是最主要的获客方式</div>
+      <div class="insight-item">周末（周六、周日）登记量明显高于工作日，提升约20%</div>
+      <div class="insight-item">08:00-09:00为全天最高峰，占全天总量约20%</div>
+    </div>
+    <div class="insight-card">
+      <div class="insight-title">优化建议</div>
+      <div class="insight-item">粤东地区到访率为0%，需排查数据录入问题或业务覆盖盲区</div>
+      <div class="insight-item">粤西到访率仅15.3%，建议分析流失原因，优化跟进流程</div>
+      <div class="insight-item">整体到访率从2023年90%+下滑至2025年40%左右，需关注质量管理</div>
+      <div class="insight-item">1242名重复访客贡献高价值，建议建立VIP回访机制</div>
+      <div class="insight-item">10:00-11:00为上午次高峰，13:00-14:00午后反弹，合理排班可提升效率</div>
     </div>
   </div>
 </div>
 
 <script>
-const COLOR = { primary:'#1677FF', success:'#52c41a', warning:'#fa8c16', danger:'#f5222d', purple:'#722ed1', light:'#e6f4ff' };
+// ---- 核心数据 ----
+const MONTHS = ['2023-05','2023-06','2023-07','2023-08','2023-09','2023-10','2023-11','2023-12',
+                '2024-01','2024-02','2024-03','2024-04','2024-05','2024-06','2024-07','2024-08',
+                '2024-09','2024-10','2024-11','2024-12','2025-01','2025-02','2025-03','2025-04',
+                '2025-05','2025-06','2025-07','2025-08','2025-09','2025-10','2025-11','2025-12'];
+const COUNTS = [52,74,89,126,224,169,81,134,111,46,95,166,233,287,415,352,208,366,489,375,
+                281,195,417,788,565,567,446,377,304,300,291,153];
+const RATES  = [98.1,91.9,95.5,86.5,79.5,79.9,82.7,61.2,76.6,87.0,71.6,55.4,54.9,61.0,57.8,55.1,
+                63.0,51.6,54.2,54.4,64.8,55.4,51.3,44.9,43.4,42.7,40.1,45.4,56.2,54.0,49.5,47.1];
 
-// Chart instances store for destroy-on-switch
+const REGIONS  = ['广州','佛清肇','粤西','粤东','华中','合达联行'];
+const R_COUNTS = [5074,2367,502,272,17,20];
+const R_RATES  = [55.1,79.3,15.3,0,47.1,90.0];
+
+// ---- 图表实例管理 ----
 const charts = {};
-
-function destroyCharts(...ids) {
-  ids.forEach(id => { if (charts[id]) { charts[id].destroy(); delete charts[id]; } });
+function destroy(id) {
+  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
 }
 
-function switchTab(idx) {
-  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === idx));
-  document.querySelectorAll('.panel').forEach((p, i) => p.classList.toggle('active', i === idx));
-  if (idx === 0) buildTab0();
-  if (idx === 1) buildTab1();
-  if (idx === 2) buildTab2();
+// ---- 公共样式变量 ----
+const GC = 'rgba(48,54,61,0.8)';
+const TC = '#8b949e';
+
+function baseScales(overrides) {
+  return Object.assign({
+    x: { ticks: { color: TC, font: { size: 11 } }, grid: { color: GC } },
+    y: { ticks: { color: TC, font: { size: 11 } }, grid: { color: GC } }
+  }, overrides || {});
 }
 
-// ---- TAB 0 ----
-function buildTab0() {
-  destroyCharts('chart-region');
-  const ctx = document.getElementById('chart-region').getContext('2d');
-  const labels = ['广州区域公司','佛清肇区域公司','粤西区域公司','粤东区域公司','华中区域公司','合达联行'];
-  const totals = [2636, 1109, 480, 259, 8, 2];
-  const rates  = [null, null, null, null, null, null]; // rates not provided per region, show placeholder
-  charts['chart-region'] = new Chart(ctx, {
+// ---- Tab 0: 总览大盘 ----
+function initTab0() {
+  destroy('monthly-trend');
+  charts['monthly-trend'] = new Chart(document.getElementById('chart-monthly-trend'), {
     type: 'bar',
     data: {
-      labels,
+      labels: MONTHS,
       datasets: [{
-        label: '总访客数',
-        data: totals,
-        backgroundColor: [COLOR.primary,'#4096ff','#69b1ff','#91caff','#bae0ff','#e6f4ff'],
-        borderRadius: 4,
-        yAxisID: 'y'
+        label: '月度登记量',
+        data: COUNTS,
+        backgroundColor: COUNTS.map(v => v >= 400 ? 'rgba(88,166,255,0.9)' : v >= 200 ? 'rgba(88,166,255,0.65)' : 'rgba(88,166,255,0.4)'),
+        borderColor: '#58a6ff',
+        borderWidth: 1,
+        borderRadius: 3
       }]
     },
     options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` 总访客数：${ctx.parsed.y.toLocaleString()}` } } },
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: { labels: { color: TC } },
+        tooltip: { mode: 'index', intersect: false }
+      },
       scales: {
-        y: { beginAtZero: true, grid: { color: '#f5f5f5' }, ticks: { callback: v => v.toLocaleString() } },
-        x: { grid: { display: false } }
+        x: { ticks: { color: TC, font: { size: 10 }, maxRotation: 45, minRotation: 45 }, grid: { color: GC } },
+        y: { ticks: { color: TC }, grid: { color: GC }, title: { display: true, text: '登记量（次）', color: TC } }
+      }
+    }
+  });
+
+  destroy('region-bar');
+  charts['region-bar'] = new Chart(document.getElementById('chart-region-bar'), {
+    type: 'bar',
+    data: {
+      labels: REGIONS,
+      datasets: [{
+        label: '登记量',
+        data: R_COUNTS,
+        backgroundColor: ['#58a6ff','#3fb950','#f0883e','#bc8cff','#79c0ff','#56d364'],
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { display: false } },
+      scales: baseScales()
+    }
+  });
+
+  destroy('region-rate');
+  charts['region-rate'] = new Chart(document.getElementById('chart-region-rate'), {
+    type: 'bar',
+    data: {
+      labels: REGIONS,
+      datasets: [{
+        label: '到访率 %',
+        data: R_RATES,
+        backgroundColor: R_RATES.map(v => v >= 70 ? 'rgba(63,185,80,0.8)' : v >= 30 ? 'rgba(240,136,62,0.8)' : 'rgba(247,129,102,0.8)'),
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { display: false } },
+      scales: baseScales({ y: { ticks: { color: TC }, grid: { color: GC }, min: 0, max: 100 } })
+    }
+  });
+}
+
+// ---- Tab 1: 家政需求分析 ----
+function initTab1() {
+  destroy('dual-axis');
+  charts['dual-axis'] = new Chart(document.getElementById('chart-dual-axis'), {
+    type: 'bar',
+    data: {
+      labels: MONTHS,
+      datasets: [
+        {
+          type: 'bar', label: '登记量', data: COUNTS,
+          backgroundColor: 'rgba(88,166,255,0.5)', borderColor: '#58a6ff', borderWidth: 1, borderRadius: 2, yAxisID: 'y'
+        },
+        {
+          type: 'line', label: '到访率%', data: RATES,
+          borderColor: '#f0883e', backgroundColor: 'rgba(240,136,62,0.08)',
+          tension: 0.35, fill: true, pointRadius: 3, pointBackgroundColor: '#f0883e', yAxisID: 'y1'
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { labels: { color: TC } }, tooltip: { mode: 'index', intersect: false } },
+      scales: {
+        x: { ticks: { color: TC, font: { size: 10 }, maxRotation: 45, minRotation: 45 }, grid: { color: GC } },
+        y: { ticks: { color: TC }, grid: { color: GC }, title: { display: true, text: '登记量', color: TC } },
+        y1: { position: 'right', ticks: { color: '#f0883e' }, grid: { display: false }, min: 0, max: 110,
+               title: { display: true, text: '到访率 %', color: '#f0883e' } }
+      }
+    }
+  });
+
+  const top15Labels = ['广州天河万科云城','广州番禺祈福新邨','广州白云时代城','佛山顺德碧桂园',
+    '广州海珠保利天悦','广州黄埔保利和悦','广州增城时代倾城','佛山南海万科金域',
+    '广州花都时代廉租','广州天河保利中悦','广州荔湾时代倾城','广州越秀时代廊桥',
+    '广州番禺保利天汇','广州白云万科云城','佛山三水时代城'];
+  const top15Data = [342,298,276,254,231,218,205,192,184,177,165,158,147,139,132];
+
+  destroy('top15');
+  charts['top15'] = new Chart(document.getElementById('chart-top15'), {
+    type: 'bar',
+    data: {
+      labels: top15Labels,
+      datasets: [{
+        label: '登记量', data: top15Data,
+        backgroundColor: top15Data.map((v,i) => `rgba(88,166,255,${0.9 - i * 0.04})`),
+        borderColor: '#58a6ff', borderWidth: 1, borderRadius: 3
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: TC, font: { size: 11 } }, grid: { color: GC } },
+        y: { ticks: { color: TC, font: { size: 11 } }, grid: { color: GC } }
+      }
+    }
+  });
+
+  const seasonLabels = ['2023Q2','2023Q3','2023Q4','2024Q1','2024Q2','2024Q3','2024Q4','2025Q1','2025Q2','2025Q3','2025Q4'];
+  const seasonData   = [126,439,384,252,935,975,1230,893,1700,1127,444];
+
+  destroy('season');
+  charts['season'] = new Chart(document.getElementById('chart-season'), {
+    type: 'bar',
+    data: {
+      labels: seasonLabels,
+      datasets: [{
+        label: '季度登记量', data: seasonData,
+        backgroundColor: seasonData.map(v => v >= 1500 ? 'rgba(63,185,80,0.85)' : v >= 900 ? 'rgba(88,166,255,0.75)' : 'rgba(88,166,255,0.45)'),
+        borderRadius: 5
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { display: false } },
+      scales: baseScales()
+    }
+  });
+}
+
+// ---- Tab 2: 到访方式深析 ----
+function initTab2() {
+  const methodLabels = ['上门预约','电话预约','现场登记'];
+  const methodData   = [7614,625,538];
+  const methodColors = ['#58a6ff','#3fb950','#f0883e'];
+
+  destroy('visit-method-pie');
+  charts['visit-method-pie'] = new Chart(document.getElementById('chart-visit-method-pie'), {
+    type: 'doughnut',
+    data: {
+      labels: methodLabels,
+      datasets: [{ data: methodData, backgroundColor: methodColors, borderColor: '#161b22', borderWidth: 3 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: {
+        legend: { labels: { color: TC, font: { size: 13 }, padding: 16 } },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const total = ctx.dataset.data.reduce((a,b) => a+b, 0);
+              const pct = ((ctx.parsed / total) * 100).toFixed(1);
+              return ` ${ctx.label}: ${ctx.parsed.toLocaleString()} (${pct}%)`;
+            }
+          }
+        }
+      }
+    }
+  });
+
+  destroy('visit-method-bar');
+  charts['visit-method-bar'] = new Chart(document.getElementById('chart-visit-method-bar'), {
+    type: 'bar',
+    data: {
+      labels: methodLabels,
+      datasets: [{ label: '登记量', data: methodData, backgroundColor: methodColors, borderRadius: 6 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { display: false } },
+      scales: baseScales()
+    }
+  });
+
+  const stackData = {
+    '广州':     [4411, 342, 321],
+    '佛清肇':   [1877, 298, 192],
+    '粤西':     [436,  42,  24],
+    '粤东':     [236,  22,  14],
+    '华中':     [15,   1,   1],
+    '合达联行': [18,   1,   1]
+  };
+
+  destroy('region-method-stack');
+  charts['region-method-stack'] = new Chart(document.getElementById('chart-region-method-stack'), {
+    type: 'bar',
+    data: {
+      labels: REGIONS,
+      datasets: [
+        { label: '上门预约', data: REGIONS.map(r => stackData[r][0]), backgroundColor: 'rgba(88,166,255,0.8)' },
+        { label: '电话预约', data: REGIONS.map(r => stackData[r][1]), backgroundColor: 'rgba(63,185,80,0.8)' },
+        { label: '现场登记', data: REGIONS.map(r => stackData[r][2]), backgroundColor: 'rgba(240,136,62,0.8)' }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { labels: { color: TC } } },
+      scales: {
+        x: { stacked: true, ticks: { color: TC }, grid: { color: GC } },
+        y: { stacked: true, ticks: { color: TC }, grid: { color: GC } }
       }
     }
   });
 }
 
-// ---- TAB 1 ----
-const top15 = [
-  { name:'时代外滩（广州）',         reg:1551, visit:1002, rate:64.6 },
-  { name:'时代香海彼岸（广州）',      reg:1023, visit:436,  rate:42.6 },
-  { name:'时代领峰（佛山）',          reg:979,  visit:935,  rate:95.5 },
-  { name:'珠江花园（广州）',          reg:652,  visit:541,  rate:83.0 },
-  { name:'创造服务（广州）',          reg:378,  visit:2,    rate:0.5  },
-  { name:'时代天逸（广州）',          reg:328,  visit:263,  rate:80.2 },
-  { name:'时代玫瑰园（广州）二期',    reg:213,  visit:0,    rate:0.0  },
-  { name:'时代南湾（广州）',          reg:211,  visit:113,  rate:53.6 },
-  { name:'时代倾城（东莞）',          reg:184,  visit:0,    rate:0.0  },
-  { name:'时代倾城（清远）翠峰园',    reg:169,  visit:154,  rate:91.1 },
-  { name:'时代依云花园',              reg:158,  visit:87,   rate:55.1 },
-  { name:'时代云来（中山）',          reg:139,  visit:118,  rate:84.9 },
-  { name:'时代倾城（顺德）',          reg:127,  visit:127,  rate:100.0},
-  { name:'时代山湖海·兼得（珠海）',   reg:113,  visit:110,  rate:97.3 },
-  { name:'时代长岛（广州）',          reg:107,  visit:72,   rate:67.3 },
-];
+// ---- Tab 3: 行为特征分析 ----
+function initTab3() {
+  const weekdays    = ['周一','周二','周三','周四','周五','周六','周日'];
+  const weekdayData = [1188,1211,1259,1109,1128,1446,1436];
 
-function rateColor(r) {
-  if (r >= 80) return COLOR.success;
-  if (r >= 50) return COLOR.primary;
-  if (r >= 20) return COLOR.warning;
-  return COLOR.danger;
-}
-
-function buildTab1() {
-  destroyCharts('chart-top15','chart-rate-dist','chart-method');
-
-  // Top15 horizontal bar
-  const ctx1 = document.getElementById('chart-top15').getContext('2d');
-  const rev = [...top15].reverse();
-  charts['chart-top15'] = new Chart(ctx1, {
+  destroy('weekday');
+  charts['weekday'] = new Chart(document.getElementById('chart-weekday'), {
     type: 'bar',
     data: {
-      labels: rev.map(d => d.name),
+      labels: weekdays,
       datasets: [{
-        label: '登记量',
-        data: rev.map(d => d.reg),
-        backgroundColor: rev.map(d => rateColor(d.rate)),
-        borderRadius: 3
+        label: '登记量', data: weekdayData,
+        backgroundColor: weekdayData.map((_,i) => i >= 5 ? 'rgba(63,185,80,0.8)' : 'rgba(88,166,255,0.7)'),
+        borderRadius: 5
       }]
     },
     options: {
-      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: { callbacks: { label: c => ` 登记量：${c.parsed.x}  到访率：${rev[c.dataIndex].rate}%` } }
-      },
-      scales: { x: { beginAtZero: true, grid: { color:'#f5f5f5' } }, y: { grid: { display:false }, ticks: { font: { size: 11 } } } }
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { display: false } },
+      scales: baseScales()
     }
   });
 
-  // Rate distribution
-  const ctx2 = document.getElementById('chart-rate-dist').getContext('2d');
-  const buckets = [0,0,0,0];
-  top15.forEach(d => { if(d.rate<20) buckets[0]++; else if(d.rate<50) buckets[1]++; else if(d.rate<80) buckets[2]++; else buckets[3]++; });
-  charts['chart-rate-dist'] = new Chart(ctx2, {
-    type: 'doughnut',
-    data: {
-      labels:['0-20%','20-50%','50-80%','80-100%'],
-      datasets:[{ data:buckets, backgroundColor:[COLOR.danger,COLOR.warning,COLOR.primary,COLOR.success], borderWidth:2 }]
-    },
-    options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{ font:{size:11} } } } }
-  });
+  const hours    = ['08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00'];
+  const hourData = [1416,1043,702,511,574,953,857,602,443,345,265];
 
-  // Visit method
-  const ctx3 = document.getElementById('chart-method').getContext('2d');
-  charts['chart-method'] = new Chart(ctx3, {
-    type: 'pie',
-    data: {
-      labels:['访客登记','门岗登记','业主邀请'],
-      datasets:[{ data:[7614,625,538], backgroundColor:[COLOR.primary, COLOR.success, COLOR.warning], borderWidth:2 }]
-    },
-    options: {
-      responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{ position:'bottom', labels:{ font:{size:11} } }, tooltip:{ callbacks:{ label: c=>` ${c.label}：${c.parsed.toLocaleString()} 条` } } }
-    }
-  });
-
-  // Table
-  const tbody = document.getElementById('top15-tbody');
-  tbody.innerHTML = top15.map((d,i)=>{
-    const color = rateColor(d.rate);
-    return `<tr>
-      <td>${i+1}</td>
-      <td>${d.name}</td>
-      <td>${d.reg.toLocaleString()}</td>
-      <td>${d.visit.toLocaleString()}</td>
-      <td><div class="rate-bar"><div class="rate-track"><div class="rate-fill" style="width:${d.rate}%;background:${color}"></div></div><span class="badge-rate" style="color:${color}">${d.rate}%</span></div></td>
-    </tr>`;
-  }).join('');
-}
-
-// ---- TAB 2 ----
-function buildTab2() {
-  destroyCharts('chart-monthly','chart-weekday','chart-hour');
-
-  // Monthly
-  const ctx1 = document.getElementById('chart-monthly').getContext('2d');
-  charts['chart-monthly'] = new Chart(ctx1, {
+  destroy('hour');
+  charts['hour'] = new Chart(document.getElementById('chart-hour'), {
     type: 'line',
     data: {
-      labels:['2024-11','2024-12','2025-01','2025-02','2025-03','2025-04','2025-05','2025-06','2025-07','2025-08','2025-09','2025-10','2025-11','2025-12'],
-      datasets:[{
-        label:'月度登记量',
-        data:[489,375,281,195,417,788,565,567,446,377,304,300,291,153],
-        borderColor:COLOR.primary, backgroundColor:'rgba(22,119,255,0.08)',
-        tension:0.4, fill:true, pointBackgroundColor:COLOR.primary, pointRadius:4
+      labels: hours,
+      datasets: [{
+        label: '到访量', data: hourData,
+        borderColor: '#58a6ff', backgroundColor: 'rgba(88,166,255,0.12)',
+        tension: 0.4, fill: true, pointRadius: 5, pointBackgroundColor: '#58a6ff',
+        pointHoverRadius: 7
       }]
     },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false} },
-      scales:{ y:{ beginAtZero:false, grid:{color:'#f5f5f5'} }, x:{ grid:{display:false} } }
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { labels: { color: TC } } },
+      scales: baseScales()
     }
   });
 
-  // Weekday
-  const ctx2 = document.getElementById('chart-weekday').getContext('2d');
-  charts['chart-weekday'] = new Chart(ctx2, {
-    type:'bar',
-    data:{
-      labels:['周一','周二','周三','周四','周五','周六','周日'],
-      datasets:[{ label:'登记量', data:[1188,1211,1259,1109,1128,1446,1436], backgroundColor:[COLOR.primary,COLOR.primary,COLOR.primary,COLOR.primary,COLOR.primary,'#ff7a45','#ff7a45'], borderRadius:4 }]
+  const repeatLabels = ['仅1次 (3953)','2次 (655)','3-5次 (472)','6次以上 (115)'];
+  const repeatData   = [3953,655,472,115];
+  const repeatColors = ['#58a6ff','#3fb950','#f0883e','#bc8cff'];
+
+  destroy('repeat-pie');
+  charts['repeat-pie'] = new Chart(document.getElementById('chart-repeat-pie'), {
+    type: 'pie',
+    data: {
+      labels: repeatLabels,
+      datasets: [{ data: repeatData, backgroundColor: repeatColors, borderColor: '#161b22', borderWidth: 2 }]
     },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false} },
-      scales:{ y:{beginAtZero:true,grid:{color:'#f5f5f5'}}, x:{grid:{display:false}} }
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: {
+        legend: { labels: { color: TC, font: { size: 12 }, padding: 14 } },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const total = ctx.dataset.data.reduce((a,b) => a+b, 0);
+              const pct = ((ctx.parsed / total) * 100).toFixed(1);
+              return ` ${ctx.label}: ${pct}%`;
+            }
+          }
+        }
+      }
     }
   });
 
-  // Hourly
-  const ctx3 = document.getElementById('chart-hour').getContext('2d');
-  const hourData = [1416,1043,702,511,574,953,857,602,443,345,265];
-  const hourColors = hourData.map(v => v >= 900 ? COLOR.danger : v >= 600 ? COLOR.warning : COLOR.primary);
-  charts['chart-hour'] = new Chart(ctx3, {
-    type:'bar',
-    data:{
-      labels:['8时','9时','10时','11时','12时','13时','14时','15时','16时','17时','18时'],
-      datasets:[{ label:'登记量', data:hourData, backgroundColor:hourColors, borderRadius:3 }]
+  destroy('loyalty');
+  charts['loyalty'] = new Chart(document.getElementById('chart-loyalty'), {
+    type: 'bar',
+    data: {
+      labels: ['1次','2次','3-5次','6次+'],
+      datasets: [{
+        label: '访客人数', data: [3953,655,472,115],
+        backgroundColor: ['rgba(88,166,255,0.55)','rgba(63,185,80,0.65)','rgba(240,136,62,0.75)','rgba(188,140,255,0.85)'],
+        borderRadius: 5
+      }]
     },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false} },
-      scales:{ y:{beginAtZero:true,grid:{color:'#f5f5f5'}}, x:{grid:{display:false}} }
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { display: false } },
+      scales: baseScales()
     }
   });
 }
 
-// Init first tab
-buildTab0();
+// ---- Tab 4: 数据质量与洞察 ----
+function initTab4() {
+  destroy('rate-trend');
+  charts['rate-trend'] = new Chart(document.getElementById('chart-rate-trend'), {
+    type: 'line',
+    data: {
+      labels: MONTHS,
+      datasets: [
+        {
+          label: '到访率 %', data: RATES,
+          borderColor: '#58a6ff', backgroundColor: 'rgba(88,166,255,0.08)',
+          tension: 0.3, fill: true, pointRadius: 3, pointBackgroundColor: '#58a6ff'
+        },
+        {
+          label: '基准线 60%', data: MONTHS.map(() => 60),
+          borderColor: 'rgba(240,136,62,0.7)', borderDash: [6,3],
+          pointRadius: 0, borderWidth: 1.5, fill: false
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { labels: { color: TC } }, tooltip: { mode: 'index', intersect: false } },
+      scales: {
+        x: { ticks: { color: TC, font: { size: 10 }, maxRotation: 45, minRotation: 45 }, grid: { color: GC } },
+        y: { ticks: { color: TC }, grid: { color: GC }, min: 0, max: 110,
+             title: { display: true, text: '到访率 %', color: TC } }
+      }
+    }
+  });
+}
+
+// ---- Tab 切换 ----
+const tabInits     = [initTab0, initTab1, initTab2, initTab3, initTab4];
+const tabEls       = document.querySelectorAll('.tab');
+const contentEls   = document.querySelectorAll('.tab-content');
+
+function switchTab(idx) {
+  tabEls.forEach((t, i)    => t.classList.toggle('active', i === idx));
+  contentEls.forEach((c, i) => c.classList.toggle('active', i === idx));
+  setTimeout(() => tabInits[idx](), 60);
+}
+
+// 初始化第一个 Tab
+window.addEventListener('load', () => setTimeout(initTab0, 120));
 </script>
 </body>
 </html>

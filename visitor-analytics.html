@@ -168,7 +168,7 @@
 <div class="header">
   <div>
     <h1>🏘️ 时代邻里 · 访客大数据统计分析</h1>
-    <div class="sub" id="header_sub">数据来源：访客登记系统 | 统计周期：2026-04-25 ~ 2026-04-26 | 共 3,771 条记录</div>
+    <div class="sub" id="header_sub">数据来源：访客登记系统 | 统计周期：2026-04-18 ~ 2026-04-26 | 共 7,248 条记录</div>
   </div>
   <div class="badge">📊 综合分析报告</div>
 </div>
@@ -178,10 +178,10 @@
   <!-- 筛选条件 -->
   <div class="filter-bar">
     <div class="filter-group">
-      <span class="filter-label">📅 日期范围</span>
-      <input type="date" class="filter-input" id="dateStart" value="2026-04-25" min="2026-04-20" max="2026-04-26">
+      <span class="filter-label">📅 来访日期</span>
+      <input type="date" class="filter-input" id="dateStart" value="2026-04-18" min="2026-04-18" max="2026-04-26">
       <span style="color:#aaa;">~</span>
-      <input type="date" class="filter-input" id="dateEnd" value="2026-04-26" min="2026-04-20" max="2026-04-26">
+      <input type="date" class="filter-input" id="dateEnd" value="2026-04-26" min="2026-04-18" max="2026-04-26">
       <button class="btn-reset" id="btnApply" style="border-color:#4361ee;color:#4361ee;">应用</button>
     </div>
     <div class="filter-group">
@@ -382,7 +382,7 @@
     <div class="panel-header pink">
       <div>
         <h3>🧹 家政需求专项分析</h3>
-        <div class="meta" id="hk_meta">家政服务访客 174 人次 · 7 家合作公司 · 日均 87 人次</div>
+        <div class="meta" id="hk_meta">家政服务访客 327 人次 · 7 家合作公司 · 日均 82 人次</div>
       </div>
       <span class="badge" style="background:rgba(255,255,255,.2); padding:6px 14px; border-radius:14px; font-size:12px;">专项视图</span>
     </div>
@@ -447,7 +447,7 @@
     <div class="panel-header">
       <div>
         <h3>🏠 租售需求专项分析</h3>
-        <div class="meta" id="rs_meta">看房 160 人次 · 装修 233 人次 · 买房需求 > 租房需求</div>
+        <div class="meta" id="rs_meta">看房 293 人次 · 装修 413 人次 · 买房需求 > 租房需求</div>
       </div>
       <span class="badge" style="background:rgba(255,255,255,.2); padding:6px 14px; border-radius:14px; font-size:12px;">专项视图</span>
     </div>
@@ -511,7 +511,7 @@
     <div class="panel-header green">
       <div>
         <h3>🏘️ 房屋常住率判断专项分析</h3>
-        <div class="meta" id="res_meta">基于外卖访客频次推算 · 涉及 1,585 个独立房间 · 外卖占总访客 77%</div>
+        <div class="meta" id="res_meta">基于外卖访客频次推算 · 涉及 4,045 个独立房间 · 外卖占总访客 78%</div>
       </div>
       <span class="badge" style="background:rgba(255,255,255,.2); padding:6px 14px; border-radius:14px; font-size:12px;">专项视图</span>
     </div>
@@ -580,117 +580,366 @@
 // 每天的访客记录（含访客类型、看房买/租、装修类型、家政公司、外卖项目、区域看板等）
 // 不同日期的数据规模不同，便于筛选演示
 const dailyDataset = {
-  "2026-04-20": {
-    visitor_type:{"外卖及快递":1612,"家政人员":138,"看房人员":127,"亲友拜访":238,"装修人员":185,"外卖":691},
-    house_view:{"看买房":71,"看租房":56},
-    decoration:{"家居安装":103,"装修施工":82},
-    housekeeping_co:{"第一家":49,"第二家":45,"第三家":31,"第四家":7,"第五家":4,"其他":2},
-    takeaway_freq:{"1次":1070,"2次":125,"3次":26,"4次":11,"5次":10,"6+次":14},
-    rooms:1257
+  "2026-04-18": {
+    "visitor_type": {
+      "外卖及快递": 891,
+      "外卖": 914,
+      "家政人员": 73,
+      "看房人员": 74,
+      "亲友拜访": 141,
+      "装修人员": 103
+    },
+    "house_view": {
+      "看买房": 34,
+      "看租房": 40
+    },
+    "decoration": {
+      "家居安装": 55,
+      "装修施工": 48
+    },
+    "housekeeping_co": {
+      "个体": 26,
+      "其他": 26,
+      "京东": 16,
+      "轻喜": 2,
+      "天鹅": 2,
+      "美团": 1
+    },
+    "takeaway_freq": {
+      "1次": 1222,
+      "2次": 176,
+      "3次": 50,
+      "4次": 13,
+      "5次": 2,
+      "6+次": 3
+    },
+    "rooms": 1087
   },
-  "2026-04-21": {
-    visitor_type:{"外卖及快递":1748,"家政人员":150,"看房人员":138,"亲友拜访":258,"装修人员":200,"外卖":749},
-    house_view:{"看买房":77,"看租房":61},
-    decoration:{"家居安装":112,"装修施工":88},
-    housekeeping_co:{"第一家":53,"第二家":49,"第三家":34,"第四家":8,"第五家":4,"其他":2},
-    takeaway_freq:{"1次":1160,"2次":136,"3次":28,"4次":12,"5次":10,"6+次":15},
-    rooms:1363
-  },
-  "2026-04-22": {
-    visitor_type:{"外卖及快递":1813,"家政人员":156,"看房人员":143,"亲友拜访":268,"装修人员":208,"外卖":777},
-    house_view:{"看买房":80,"看租房":63},
-    decoration:{"家居安装":116,"装修施工":92},
-    housekeeping_co:{"第一家":55,"第二家":51,"第三家":35,"第四家":8,"第五家":4,"其他":3},
-    takeaway_freq:{"1次":1203,"2次":141,"3次":29,"4次":12,"5次":11,"6+次":16},
-    rooms:1414
-  },
-  "2026-04-23": {
-    visitor_type:{"外卖及快递":1880,"家政人员":161,"看房人员":148,"亲友拜访":277,"装修人员":215,"外卖":805},
-    house_view:{"看买房":83,"看租房":65},
-    decoration:{"家居安装":120,"装修施工":95},
-    housekeeping_co:{"第一家":57,"第二家":52,"第三家":36,"第四家":8,"第五家":5,"其他":3},
-    takeaway_freq:{"1次":1247,"2次":146,"3次":31,"4次":13,"5次":11,"6+次":17},
-    rooms:1465
-  },
-  "2026-04-24": {
-    visitor_type:{"外卖及快递":1948,"家政人员":167,"看房人员":154,"亲友拜访":287,"装修人员":223,"外卖":833},
-    house_view:{"看买房":86,"看租房":68},
-    decoration:{"家居安装":124,"装修施工":99},
-    housekeeping_co:{"第一家":59,"第二家":54,"第三家":37,"第四家":9,"第五家":5,"其他":3},
-    takeaway_freq:{"1次":1291,"2次":151,"3次":32,"4次":13,"5次":11,"6+次":17},
-    rooms:1517
+  "2026-04-19": {
+    "visitor_type": {
+      "外卖及快递": 924,
+      "外卖": 1,
+      "家政人员": 80,
+      "看房人员": 59,
+      "亲友拜访": 140,
+      "装修人员": 77
+    },
+    "house_view": {
+      "看买房": 29,
+      "看租房": 30
+    },
+    "decoration": {
+      "家居安装": 48,
+      "装修施工": 27
+    },
+    "housekeeping_co": {
+      "其他": 31,
+      "个体": 29,
+      "京东": 16,
+      "轻喜": 2,
+      "美团": 1,
+      "天鹅": 1
+    },
+    "takeaway_freq": {
+      "1次": 720,
+      "2次": 74,
+      "3次": 16,
+      "4次": 1,
+      "5次": 1,
+      "6+次": 0
+    },
+    "rooms": 1116
   },
   "2026-04-25": {
-    visitor_type:{"外卖及快递":1016,"家政人员":87,"看房人员":80,"亲友拜访":150,"装修人员":117,"外卖":435},
-    house_view:{"看买房":45,"看租房":35},
-    decoration:{"家居安装":65,"装修施工":52},
-    housekeeping_co:{"第一家":31,"第二家":28,"第三家":20,"第四家":4,"第五家":3,"其他":1},
-    takeaway_freq:{"1次":675,"2次":79,"3次":17,"4次":7,"5次":6,"6+次":9},
-    rooms:792
+    "visitor_type": {
+      "外卖及快递": 1031,
+      "外卖": 870,
+      "家政人员": 78,
+      "看房人员": 92,
+      "亲友拜访": 159,
+      "装修人员": 130
+    },
+    "house_view": {
+      "看买房": 48,
+      "看租房": 44
+    },
+    "decoration": {
+      "家居安装": 71,
+      "装修施工": 59
+    },
+    "housekeeping_co": {
+      "个体": 31,
+      "其他": 26,
+      "京东": 15,
+      "天鹅": 4,
+      "美团": 1,
+      "轻喜": 1
+    },
+    "takeaway_freq": {
+      "1次": 1327,
+      "2次": 196,
+      "3次": 36,
+      "4次": 8,
+      "5次": 7,
+      "6+次": 1
+    },
+    "rooms": 1279
   },
   "2026-04-26": {
-    visitor_type:{"外卖及快递":1017,"家政人员":87,"看房人员":80,"亲友拜访":150,"装修人员":116,"外卖":436},
-    house_view:{"看买房":45,"看租房":35},
-    decoration:{"家居安装":65,"装修施工":51},
-    housekeeping_co:{"第一家":31,"第二家":29,"第三家":19,"第四家":5,"第五家":2,"其他":1},
-    takeaway_freq:{"1次":674,"2次":79,"3次":16,"4次":7,"5次":6,"6+次":9},
-    rooms:793
+    "visitor_type": {
+      "外卖及快递": 1002,
+      "外卖": 1,
+      "家政人员": 96,
+      "看房人员": 68,
+      "亲友拜访": 141,
+      "装修人员": 103
+    },
+    "house_view": {
+      "看买房": 42,
+      "看租房": 26
+    },
+    "decoration": {
+      "家居安装": 59,
+      "装修施工": 44
+    },
+    "housekeeping_co": {
+      "其他": 31,
+      "个体": 31,
+      "京东": 24,
+      "天鹅": 5,
+      "轻喜": 4,
+      "好慷": 1
+    },
+    "takeaway_freq": {
+      "1次": 794,
+      "2次": 77,
+      "3次": 11,
+      "4次": 3,
+      "5次": 2,
+      "6+次": 0
+    },
+    "rooms": 1230
   }
 };
 
 // 区域基线数据（按总7天累计）
 const regionBaseline = {
-  housekeeping: [
-    {region:'广州区域公司', projects:12, count:580, mainCo:'第一家、第三家', rate:6.2},
-    {region:'清远区域公司', projects:6, count:320, mainCo:'第二家、第四家', rate:5.8},
-    {region:'肇庆区域公司', projects:5, count:240, mainCo:'第一家', rate:4.5},
-    {region:'顺德区域公司', projects:4, count:210, mainCo:'第二家、第三家', rate:7.1},
-    {region:'惠州区域公司', projects:5, count:180, mainCo:'第五家、其他', rate:5.2},
-    {region:'河源区域公司', projects:4, count:110, mainCo:'第三家', rate:4.0},
-    {region:'湛江区域公司', projects:3, count:70, mainCo:'第四家', rate:3.5},
-    {region:'四会区域公司', projects:3, count:30, mainCo:'其他', rate:2.8}
+  "housekeeping": [
+    {
+      "region": "其他区域",
+      "projects": 33,
+      "count": 153,
+      "mainCo": "其他、个体",
+      "rate": 0.7
+    },
+    {
+      "region": "佛清肇区域公司",
+      "projects": 21,
+      "count": 100,
+      "mainCo": "个体、其他",
+      "rate": 0.7
+    },
+    {
+      "region": "广州区域公司",
+      "projects": 10,
+      "count": 34,
+      "mainCo": "其他、京东",
+      "rate": 0.5
+    },
+    {
+      "region": "粤东区域公司",
+      "projects": 10,
+      "count": 33,
+      "mainCo": "个体、其他",
+      "rate": 0.5
+    },
+    {
+      "region": "华中区域公司",
+      "projects": 2,
+      "count": 7,
+      "mainCo": "个体、京东",
+      "rate": 0.5
+    }
   ],
-  rental: [
-    {region:'广州区域公司', projects:12, buy:320, rent:180, decoration:880},
-    {region:'清远区域公司', projects:6, buy:180, rent:120, decoration:420},
-    {region:'惠州区域公司', projects:5, buy:110, rent:90, decoration:280},
-    {region:'顺德区域公司', projects:4, buy:90, rent:70, decoration:240},
-    {region:'肇庆区域公司', projects:5, buy:80, rent:60, decoration:220},
-    {region:'河源区域公司', projects:4, buy:60, rent:80, decoration:140},
-    {region:'湛江区域公司', projects:3, buy:40, rent:70, decoration:90},
-    {region:'四会区域公司', projects:3, buy:20, rent:30, decoration:60}
+  "rental": [
+    {
+      "region": "其他区域",
+      "projects": 83,
+      "buy": 107,
+      "rent": 69,
+      "decoration": 202
+    },
+    {
+      "region": "粤东区域公司",
+      "projects": 26,
+      "buy": 9,
+      "rent": 23,
+      "decoration": 86
+    },
+    {
+      "region": "佛清肇区域公司",
+      "projects": 45,
+      "buy": 19,
+      "rent": 20,
+      "decoration": 73
+    },
+    {
+      "region": "广州区域公司",
+      "projects": 33,
+      "buy": 11,
+      "rent": 21,
+      "decoration": 44
+    },
+    {
+      "region": "华中区域公司",
+      "projects": 11,
+      "buy": 5,
+      "rent": 3,
+      "decoration": 6
+    },
+    {
+      "region": "粤西区域公司",
+      "projects": 7,
+      "buy": 2,
+      "rent": 4,
+      "decoration": 2
+    },
+    {
+      "region": "合达联行",
+      "projects": 2,
+      "buy": 0,
+      "rent": 0,
+      "decoration": 0
+    }
   ],
-  residence: [
-    {region:'广州区域公司', projects:12, takeawayWeight:0.34, roomsWeight:0.33, idx:88.5, highRate:5.2, level:'高'},
-    {region:'清远区域公司', projects:6, takeawayWeight:0.14, roomsWeight:0.18, idx:82.3, highRate:4.5, level:'高'},
-    {region:'顺德区域公司', projects:4, takeawayWeight:0.12, roomsWeight:0.14, idx:91.2, highRate:6.1, level:'极高'},
-    {region:'肇庆区域公司', projects:5, takeawayWeight:0.11, roomsWeight:0.12, idx:78.6, highRate:3.8, level:'中'},
-    {region:'惠州区域公司', projects:5, takeawayWeight:0.06, roomsWeight:0.09, idx:65.4, highRate:2.9, level:'中'},
-    {region:'河源区域公司', projects:4, takeawayWeight:0.05, roomsWeight:0.07, idx:58.2, highRate:2.1, level:'低'},
-    {region:'四会区域公司', projects:3, takeawayWeight:0.02, roomsWeight:0.05, idx:42.5, highRate:1.5, level:'低'},
-    {region:'湛江区域公司', projects:3, takeawayWeight:0.008, roomsWeight:0.025, idx:28.7, highRate:0.8, level:'极低'}
+  "residence": [
+    {
+      "region": "佛清肇区域公司",
+      "projects": 45,
+      "takeawayWeight": 0.387,
+      "roomsWeight": 0.299,
+      "idx": 18.0,
+      "highRate": 3.7,
+      "level": "中"
+    },
+    {
+      "region": "粤东区域公司",
+      "projects": 26,
+      "takeawayWeight": 0.258,
+      "roomsWeight": 0.215,
+      "idx": 16.7,
+      "highRate": 2.8,
+      "level": "中"
+    },
+    {
+      "region": "广州区域公司",
+      "projects": 33,
+      "takeawayWeight": 0.093,
+      "roomsWeight": 0.096,
+      "idx": 13.6,
+      "highRate": 3.9,
+      "level": "低"
+    },
+    {
+      "region": "粤西区域公司",
+      "projects": 7,
+      "takeawayWeight": 0.013,
+      "roomsWeight": 0.015,
+      "idx": 12.7,
+      "highRate": 1.7,
+      "level": "低"
+    },
+    {
+      "region": "合达联行",
+      "projects": 2,
+      "takeawayWeight": 0.001,
+      "roomsWeight": 0.001,
+      "idx": 10.0,
+      "highRate": 0.0,
+      "level": "低"
+    },
+    {
+      "region": "其他区域",
+      "projects": 83,
+      "takeawayWeight": 0.247,
+      "roomsWeight": 0.361,
+      "idx": 9.5,
+      "highRate": 0.9,
+      "level": "低"
+    },
+    {
+      "region": "华中区域公司",
+      "projects": 11,
+      "takeawayWeight": 0.002,
+      "roomsWeight": 0.013,
+      "idx": 1.7,
+      "highRate": 0.0,
+      "level": "极低"
+    }
   ]
 };
 
 // 项目访客量基线
 const projectBaseline = {
-  "时代·悦府（广州广钢）":1352,"时代倾城（清远）澜江府":768,
-  "时代·印象（广州）":680,"时代倾城（顺德）一期":652,
-  "四会雍晟财智广场":624,"时代倾城（河源）":496,
-  "时代外滩（肇庆）":440,"龙光玖龙湾（惠州）":424,
-  "时代全筑创客小镇":388,"北星城":352,
-  "南塘山庄":324,"海珠里6期":320,
-  "兰台小院":304,"时代倾城（清远）瀚江府":276,
-  "时代花园（广州）":256
+  "时代天韵（东莞）": 707,
+  "时代倾城（清远）翰林府": 422,
+  "时代倾城（顺德）一期": 372,
+  "四会雍晟财智广场": 308,
+  "时代倾城（河源）": 304,
+  "时代外滩（肇庆）": 240,
+  "惠州澳林大邸": 219,
+  "西樾台小区": 195,
+  "丹郡湖岸": 172,
+  "时代金地招商云禧": 170,
+  "北星城": 164,
+  "时代倾城（清远）瀚江府": 155,
+  "鹭湖宫6区": 154,
+  "书香华府": 109,
+  "鹭湖宫10区": 104
 };
 
 // 看房项目基线（每项目7天累计）
 const viewProjectBaseline = {
-  "兰台花苑":{"买":28,"租":56},"北星城":{"买":24,"租":16},
-  "溪岸花苑":{"买":32,"租":0},"时代英之苑（湛江）（广钢）":{"买":0,"租":32},
-  "兰台小院":{"买":24,"租":4},"龙光玖龙湾（惠州）":{"买":16,"租":12},
-  "南塘山庄":{"买":16,"租":8},"时代蓝山（广州）一期":{"买":12,"租":12},
-  "海珠里6期":{"买":12,"租":8},"东台城·邑墅（广东）":{"买":4,"租":16}
+  "凯德风尚": {
+    "买": 18,
+    "租": 25
+  },
+  "北星城": {
+    "买": 12,
+    "租": 5
+  },
+  "西樾台小区": {
+    "买": 11,
+    "租": 2
+  },
+  "时代英之皇·廊桥（惠州）": {
+    "买": 1,
+    "租": 11
+  },
+  "西溪里别院": {
+    "买": 11,
+    "租": 1
+  },
+  "丹郡湖岸": {
+    "买": 8,
+    "租": 3
+  },
+  "朗诗未来著": {
+    "买": 5,
+    "租": 6
+  },
+  "惠州澳林大邸": {
+    "买": 4,
+    "租": 6
+  },
+  "时代香海彼岸（广州）": {
+    "买": 4,
+    "租": 6
+  },
+  "时代大家（广州）": {
+    "买": 0,
+    "租": 8
+  }
 };
 
 const colors = ['#4361ee','#f72585','#7209b7','#06d6a0','#fb8500','#3a86ff','#ff006e','#8338ec'];
@@ -1106,7 +1355,7 @@ function applyFilter() {
   }
   const dates = getDateList(start, end);
   if (dates.length === 0) {
-    alert('所选日期范围内无数据（可选范围：2026-04-20 ~ 2026-04-26）');
+    alert('所选日期范围内无数据（可选范围：2026-04-18 ~ 2026-04-26，部分日期无数据会被自动跳过）');
     return;
   }
   currentDates = dates;
@@ -1115,7 +1364,7 @@ function applyFilter() {
 }
 
 function resetFilter() {
-  document.getElementById('dateStart').value = '2026-04-20';
+  document.getElementById('dateStart').value = '2026-04-18';
   document.getElementById('dateEnd').value = '2026-04-26';
   applyFilter();
   document.querySelector('.chip[data-panel="overview"]').click();
